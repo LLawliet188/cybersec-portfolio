@@ -20,6 +20,7 @@ type LightRaysProps = {
   mouseInfluence?: number;
   noiseAmount?: number;
   distortion?: number;
+  className?: string;
 };
 
 const originMap: Record<RaysOrigin, [number, number]> = {
@@ -124,6 +125,7 @@ const LightRaysComponent = ({
   mouseInfluence = 0.18,
   noiseAmount = 0.03,
   distortion = 0.06,
+  className = "",
 }: LightRaysProps) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
 
@@ -178,9 +180,14 @@ const LightRaysComponent = ({
 
     const handlePointerMove = (event: PointerEvent) => {
       const rect = container.getBoundingClientRect();
+      if (!rect.width || !rect.height) return;
+
+      const x = (event.clientX - rect.left) / rect.width;
+      const y = 1 - (event.clientY - rect.top) / rect.height;
+
       uniforms.uMouse.value.set(
-        (event.clientX - rect.left) / rect.width,
-        1 - (event.clientY - rect.top) / rect.height,
+        Math.min(Math.max(x, 0), 1),
+        Math.min(Math.max(y, 0), 1),
       );
     };
 
@@ -196,13 +203,13 @@ const LightRaysComponent = ({
     resize();
     update();
     window.addEventListener("resize", resize);
-    container.addEventListener("pointermove", handlePointerMove);
+    window.addEventListener("pointermove", handlePointerMove, { passive: true });
 
     return () => {
       // PERF: The WebGL requestAnimationFrame loop is canceled on unmount so the canvas stops rendering offscreen.
       window.cancelAnimationFrame(frameId);
       window.removeEventListener("resize", resize);
-      container.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointermove", handlePointerMove);
       mesh.geometry.remove();
       program.remove();
       gl.getExtension("WEBGL_lose_context")?.loseContext();
@@ -223,7 +230,7 @@ const LightRaysComponent = ({
   return (
     <div
       aria-hidden="true"
-      className="pointer-events-none absolute inset-0 mix-blend-screen opacity-80"
+      className={`pointer-events-none absolute inset-0 mix-blend-screen opacity-80 ${className}`}
       ref={containerRef}
     />
   );

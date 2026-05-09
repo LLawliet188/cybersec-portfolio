@@ -42,9 +42,9 @@ export const SITE = {
 
 export const NAV_LINKS = [
   { label: "Home", href: "#home", id: "home" },
-  { label: "Projects", href: "#projects", id: "projects" },
   { label: "Skills", href: "#skills", id: "skills" },
   { label: "Certifications", href: "#certifications", id: "certifications" },
+  { label: "Projects", href: "#projects", id: "projects" },
   { label: "Contact", href: "#contact", id: "contact" },
 ];
 
@@ -176,10 +176,10 @@ export const PROJECTS: Project[] = [
     status: "ACTIVE",
     severity: "HIGH",
     description:
-      "A Python-based tool that automates network reconnaissance and vulnerability detection using Nmap and custom scripts. Generates structured reports with risk scoring.",
-    stack: ["Python", "Nmap", "Linux", "Docker"],
-    githubUrl: "https://github.com/LLawliet188/network-vulnerability-scanner",
-    liveUrl: "#contact",
+      "A standalone React cybersecurity interface for AI-powered network reconnaissance, animated scan logs, threat metrics, and risk report storytelling.",
+    stack: ["React", "TypeScript", "TailwindCSS", "Framer Motion"],
+    githubUrl: "https://github.com/LLawliet188/network-vulnerability-scanner-web",
+    liveUrl: "https://github.com/LLawliet188/network-vulnerability-scanner-web",
   },
   {
     title: "Secure Password Vault",
