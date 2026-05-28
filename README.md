@@ -18,6 +18,7 @@ Modern React portfolio for Manas Ranjan Rao, a BSc Computer Science student at I
 - TailwindCSS
 - Framer Motion
 - OGL WebGL effects
+- Three.js shader effects
 - Lucide React icons
 
 ## Project Structure
@@ -73,6 +74,6 @@ git init
 git add .
 git commit -m "Initial portfolio website"
 git branch -M main
-git remote add origin https://github.com/LLawliet188/manas-ranjan-rao-cybersecurity-portfolio.git
+git remote add origin https://github.com/LLawliet188/cybersec-portfolio.git
 git push -u origin main
 ```

@@ -14,11 +14,13 @@ import { TerminalSection } from "./sections/TerminalSection";
 
 const AppComponent = () => {
   useEffect(() => {
+    let frameId = 0;
+
     const scrollToHash = () => {
       const id = window.location.hash.slice(1);
       if (!id) return;
 
-      window.requestAnimationFrame(() => {
+      frameId = window.requestAnimationFrame(() => {
         document.getElementById(id)?.scrollIntoView({ block: "start" });
       });
     };
@@ -26,7 +28,10 @@ const AppComponent = () => {
     scrollToHash();
     window.addEventListener("hashchange", scrollToHash);
 
-    return () => window.removeEventListener("hashchange", scrollToHash);
+    return () => {
+      window.cancelAnimationFrame(frameId);
+      window.removeEventListener("hashchange", scrollToHash);
+    };
   }, []);
 
   return (

@@ -56,7 +56,6 @@ export const NAV_COPY = {
 
 export const HERO = {
   credential: "// BSc Computer Science - IUBH Bad Honnef, Germany",
-  heading: "Cybersecurity &\nSoftware Engineering Student",
   headingLines: ["Cybersecurity &", "Software Engineering Student"],
   subheading:
     "I build secure web experiences, study real-world attack surfaces, and turn cybersecurity learning into practical tools.",
@@ -70,9 +69,9 @@ export const HERO = {
     score: "98.7",
     caption: "defense posture",
     rows: [
-      { label: "Recon", value: "mapped", tone: "cyan" },
-      { label: "Web surface", value: "hardened", tone: "blue" },
-      { label: "Threat feed", value: "live", tone: "green" },
+      { label: "Recon", value: "mapped" },
+      { label: "Web surface", value: "hardened" },
+      { label: "Threat feed", value: "live" },
     ],
   },
 };

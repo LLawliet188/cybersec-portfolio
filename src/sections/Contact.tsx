@@ -1,4 +1,4 @@
-import { memo, useState, type FormEvent } from "react";
+import { memo, useEffect, useRef, useState, type FormEvent } from "react";
 import { Check, Loader2, Send } from "lucide-react";
 import { motion } from "framer-motion";
 import { SectionHeader } from "../components/common/SectionHeader";
@@ -26,6 +26,15 @@ const ContactComponent = () => {
   const [values, setValues] = useState<FormValues>(initialValues);
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitState, setSubmitState] = useState<SubmitState>("idle");
+  const submitTimeoutRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (submitTimeoutRef.current) {
+        window.clearTimeout(submitTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const validate = () => {
     const nextErrors: FormErrors = {};
@@ -48,7 +57,11 @@ const ContactComponent = () => {
     if (Object.keys(nextErrors).length > 0) return;
 
     setSubmitState("loading");
-    window.setTimeout(() => {
+    if (submitTimeoutRef.current) {
+      window.clearTimeout(submitTimeoutRef.current);
+    }
+
+    submitTimeoutRef.current = window.setTimeout(() => {
       setSubmitState("success");
       setValues(initialValues);
     }, 1100);

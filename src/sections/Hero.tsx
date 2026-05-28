@@ -1,4 +1,4 @@
-import { memo } from "react";
+import { lazy, memo, Suspense, useEffect, useState } from "react";
 import { ArrowRight, ShieldCheck } from "lucide-react";
 import { motion } from "framer-motion";
 import { HexGrid } from "../components/effects/HexGrid";
@@ -8,8 +8,27 @@ import { HERO, SITE } from "../content/siteContent";
 import { useReveal } from "../hooks/useReveal";
 import { premiumEase, revealContainer, revealItem } from "../utils/animation";
 
+const GhostCursor = lazy(() =>
+  import("../components/effects/GhostCursor").then((module) => ({
+    default: module.GhostCursor,
+  })),
+);
+
 const HeroComponent = () => {
   const { ref, isInView } = useReveal();
+  const [showGhostCursor, setShowGhostCursor] = useState(false);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia(
+      "(min-width: 768px) and (prefers-reduced-motion: no-preference)",
+    );
+    const updateGhostCursor = () => setShowGhostCursor(mediaQuery.matches);
+
+    updateGhostCursor();
+    mediaQuery.addEventListener("change", updateGhostCursor);
+
+    return () => mediaQuery.removeEventListener("change", updateGhostCursor);
+  }, []);
 
   return (
     <motion.section
@@ -31,6 +50,11 @@ const HeroComponent = () => {
         raysOrigin="top-center"
         raysSpeed={1.2}
       />
+      {showGhostCursor ? (
+        <Suspense fallback={null}>
+          <GhostCursor className="opacity-70" />
+        </Suspense>
+      ) : null}
       <HexGrid className="opacity-[0.03]" />
       <motion.div
         animate={{ x: [0, 18, -8, 0], y: [0, -16, 10, 0] }}
@@ -52,6 +76,7 @@ const HeroComponent = () => {
             {HERO.credential}
           </motion.p>
           <motion.h1
+            aria-label={HERO.headingLines.join(" ")}
             className="bg-heading-gradient bg-clip-text font-display text-4xl font-bold leading-[1.02] text-transparent sm:text-5xl md:text-6xl xl:text-7xl"
             variants={revealItem}
           >

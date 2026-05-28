@@ -1,5 +1,5 @@
 {
-  "name": "manas-ranjan-rao-cybersecurity-portfolio",
+  "name": "cybersec-portfolio",
   "private": true,
   "version": "0.1.0",
   "description": "A modern cybersecurity portfolio for Manas Ranjan Rao.",
@@ -8,7 +8,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/LLawliet188/manas-ranjan-rao-cybersecurity-portfolio.git"
+    "url": "https://github.com/LLawliet188/cybersec-portfolio.git"
   },
   "scripts": {
     "dev": "vite",
@@ -20,11 +20,13 @@
     "lucide-react": "^1.14.0",
     "ogl": "^1.0.11",
     "react": "^19.2.6",
-    "react-dom": "^19.2.6"
+    "react-dom": "^19.2.6",
+    "three": "^0.184.0"
   },
   "devDependencies": {
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
+    "@types/three": "^0.184.1",
     "@vitejs/plugin-react": "^6.0.1",
     "autoprefixer": "^10.5.0",
     "postcss": "^8.5.14",
