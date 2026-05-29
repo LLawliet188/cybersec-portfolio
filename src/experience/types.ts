@@ -21,6 +21,7 @@ export type MissionNode = {
     secondary: string;
     alert: string;
   };
+  artifact: "core" | "scanner" | "construct" | "vault" | "dossier" | "beacon";
   signal: string[];
   intel: Array<{
     label: string;

@@ -9,9 +9,16 @@ import { missionNodes } from "./missionContent";
 type MissionHudProps = {
   audioEnabled: boolean;
   setAudioEnabled: (enabled: boolean) => void;
+  setVolume: (volume: number) => void;
+  volume: number;
 };
 
-const MissionHudComponent = ({ audioEnabled, setAudioEnabled }: MissionHudProps) => {
+const MissionHudComponent = ({
+  audioEnabled,
+  setAudioEnabled,
+  setVolume,
+  volume,
+}: MissionHudProps) => {
   const { activeNode, holdNode, mode, progress } = useEnvironment();
   const activeIndex = missionNodes.findIndex((node) => node.id === activeNode);
   const active = missionNodes[activeIndex] ?? missionNodes[0];
@@ -84,6 +91,19 @@ const MissionHudComponent = ({ audioEnabled, setAudioEnabled }: MissionHudProps)
               <Headphones size={13} />
               <span>{holdNode ? "narrating" : mode}</span>
             </div>
+            <label className="hidden items-center gap-2 rounded-full border border-white/12 bg-white/[0.035] px-3 py-2 backdrop-blur-xl lg:flex">
+              <span className="sr-only">Cinematic audio volume</span>
+              <input
+                aria-label="Cinematic audio volume"
+                className="h-1 w-20 accent-success"
+                max="1"
+                min="0"
+                onChange={(event) => setVolume(Number(event.target.value))}
+                step="0.01"
+                type="range"
+                value={volume}
+              />
+            </label>
           </div>
         </div>
       </div>

@@ -9,7 +9,8 @@ const particleCount = typeof window !== "undefined" && window.innerWidth < 768 ?
 const ParticleField = () => {
   const pointsRef = useRef<Points>(null);
   const materialRef = useRef<PointsMaterial>(null);
-  const { activeNode, intensity, mode, progress } = useEnvironment();
+  const { activeNode, intensity, mode, progress, sceneProgress, transitionProgress } =
+    useEnvironment();
   const geometry = useMemo(() => {
     const positions = new Float32Array(particleCount * 3);
     for (let index = 0; index < particleCount; index += 1) {
@@ -35,19 +36,28 @@ const ParticleField = () => {
     const elapsed = clock.getElapsedTime();
     if (pointsRef.current) {
       pointsRef.current.rotation.y = elapsed * (0.018 + intensity * 0.04) + progress * 0.8;
-      pointsRef.current.rotation.x = Math.sin(elapsed * 0.14) * 0.08;
-      pointsRef.current.position.z = -1.5 + Math.sin(progress * Math.PI) * 0.8;
+      pointsRef.current.rotation.x = Math.sin(elapsed * 0.14) * 0.08 + transitionProgress * 0.12;
+      pointsRef.current.position.x = (sceneProgress - 0.5) * 0.7;
+      pointsRef.current.position.z = -1.5 + Math.sin(progress * Math.PI) * 0.8 - transitionProgress * 0.5;
     }
 
     if (materialRef.current) {
       materialRef.current.color.lerp(new Color(node.ambient.secondary), 0.035);
       materialRef.current.opacity =
-        mode === "idle" ? 0.24 : mode === "breach" ? 0.54 + intensity * 0.28 : 0.34 + intensity * 0.22;
-      materialRef.current.size = mode === "breach" ? 0.032 + intensity * 0.018 : 0.024 + intensity * 0.012;
+        mode === "idle"
+          ? 0.22 + transitionProgress * 0.08
+          : mode === "breach"
+            ? 0.48 + intensity * 0.2 + transitionProgress * 0.16
+            : 0.28 + intensity * 0.18 + transitionProgress * 0.14;
+      materialRef.current.size =
+        mode === "breach"
+          ? 0.03 + intensity * 0.014 + transitionProgress * 0.008
+          : 0.022 + intensity * 0.01 + transitionProgress * 0.006;
     }
 
-    camera.position.z = 7.8 - intensity * 0.55;
-    camera.position.x = Math.sin(progress * Math.PI * 2) * 0.4;
+    camera.position.z = 7.9 - intensity * 0.45 - transitionProgress * 0.35;
+    camera.position.x = Math.sin(progress * Math.PI * 2) * 0.4 + (sceneProgress - 0.5) * 0.28;
+    camera.position.y = Math.sin(sceneProgress * Math.PI) * 0.22;
     camera.lookAt(0, 0, 0);
   });
 

@@ -11,17 +11,23 @@ import { missionNodes } from "./missionContent";
 import type { EnvironmentMode, MissionId } from "./types";
 
 type EnvironmentState = {
+  activatedNode: MissionId | null;
   activeNode: MissionId;
   holdNode: MissionId | null;
   intensity: number;
   mode: EnvironmentMode;
   progress: number;
   reducedMotion: boolean;
+  sceneProgress: number;
+  transitionProgress: number;
+  setActivatedNode: (node: MissionId | null) => void;
   setActiveNode: (node: MissionId) => void;
   setHoldNode: (node: MissionId | null) => void;
   setIntensity: (intensity: number) => void;
   setMode: (mode: EnvironmentMode) => void;
   setProgress: (progress: number) => void;
+  setSceneProgress: (progress: number) => void;
+  setTransitionProgress: (progress: number) => void;
 };
 
 const EnvironmentContext = createContext<EnvironmentState | null>(null);
@@ -33,10 +39,13 @@ const getInitialReducedMotion = () =>
 
 const EnvironmentProviderComponent = ({ children }: { children: ReactNode }) => {
   const [activeNode, setActiveNode] = useState<MissionId>(missionNodes[0].id);
+  const [activatedNode, setActivatedNode] = useState<MissionId | null>(null);
   const [holdNode, setHoldNode] = useState<MissionId | null>(null);
   const [intensity, setRawIntensity] = useState(0);
   const [mode, setMode] = useState<EnvironmentMode>("idle");
   const [progress, setRawProgress] = useState(0);
+  const [sceneProgress, setRawSceneProgress] = useState(0);
+  const [transitionProgress, setRawTransitionProgress] = useState(0);
   const [reducedMotion] = useState(getInitialReducedMotion);
 
   const setIntensity = useCallback((nextIntensity: number) => {
@@ -47,21 +56,49 @@ const EnvironmentProviderComponent = ({ children }: { children: ReactNode }) => 
     setRawProgress(Math.min(Math.max(nextProgress, 0), 1));
   }, []);
 
+  const setSceneProgress = useCallback((nextProgress: number) => {
+    setRawSceneProgress(Math.min(Math.max(nextProgress, 0), 1));
+  }, []);
+
+  const setTransitionProgress = useCallback((nextProgress: number) => {
+    setRawTransitionProgress(Math.min(Math.max(nextProgress, 0), 1));
+  }, []);
+
   const value = useMemo(
     () => ({
+      activatedNode,
       activeNode,
       holdNode,
       intensity,
       mode,
       progress,
       reducedMotion,
+      sceneProgress,
+      transitionProgress,
+      setActivatedNode,
       setActiveNode,
       setHoldNode,
       setIntensity,
       setMode,
       setProgress,
+      setSceneProgress,
+      setTransitionProgress,
     }),
-    [activeNode, holdNode, intensity, mode, progress, reducedMotion, setIntensity, setProgress],
+    [
+      activatedNode,
+      activeNode,
+      holdNode,
+      intensity,
+      mode,
+      progress,
+      reducedMotion,
+      sceneProgress,
+      transitionProgress,
+      setIntensity,
+      setProgress,
+      setSceneProgress,
+      setTransitionProgress,
+    ],
   );
 
   return <EnvironmentContext.Provider value={value}>{children}</EnvironmentContext.Provider>;

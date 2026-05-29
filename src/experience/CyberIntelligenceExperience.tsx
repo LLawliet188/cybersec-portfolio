@@ -7,9 +7,8 @@ import { AudioManager } from "./AudioManager";
 import { EnvironmentProvider } from "./EnvironmentProvider";
 import { IntelligenceAtmosphere } from "./IntelligenceAtmosphere";
 import { MissionHud } from "./MissionHud";
-import { MissionNodeView } from "./MissionNode";
-import { missionNodes } from "./missionContent";
 import { NarrationSystem } from "./NarrationSystem";
+import { SceneManager } from "./SceneManager";
 import { TacticalCursor } from "./TacticalCursor";
 import type { MissionNode } from "./types";
 import { WorldStateController } from "./WorldStateController";
@@ -34,6 +33,7 @@ const MissionEndcap = memo(() => (
 const ExperienceInner = () => {
   const [hasEntered, setHasEntered] = useState(false);
   const [audioEnabled, setAudioEnabled] = useState(false);
+  const [volume, setVolume] = useState(0.42);
   const [activeNarration, setActiveNarration] = useState<MissionNode | null>(null);
 
   const enterExperience = () => {
@@ -54,6 +54,7 @@ const ExperienceInner = () => {
             activeNarration={activeNarration}
             enabled={audioEnabled}
             setEnabled={setAudioEnabled}
+            volume={volume}
           />
           <WorldStateController />
           <IntelligenceAtmosphere />
@@ -61,17 +62,16 @@ const ExperienceInner = () => {
             <ParticleEngine />
           </Suspense>
           <TacticalCursor />
-          <MissionHud audioEnabled={audioEnabled} setAudioEnabled={setAudioEnabled} />
+          <MissionHud
+            audioEnabled={audioEnabled}
+            setAudioEnabled={setAudioEnabled}
+            setVolume={setVolume}
+            volume={volume}
+          />
           <NarrationSystem activeNarration={activeNarration} />
 
           <main className="relative z-10">
-            {missionNodes.map((node) => (
-              <MissionNodeView
-                key={node.id}
-                node={node}
-                onNarration={setActiveNarration}
-              />
-            ))}
+            <SceneManager onNarration={setActiveNarration} />
           </main>
 
           <MissionEndcap />

@@ -4,7 +4,16 @@ import { missionNodes } from "./missionContent";
 import { useEnvironment } from "./EnvironmentProvider";
 
 const WorldStateControllerComponent = () => {
-  const { holdNode, reducedMotion, setActiveNode, setMode, setProgress } = useEnvironment();
+  const {
+    activatedNode,
+    holdNode,
+    reducedMotion,
+    setActiveNode,
+    setMode,
+    setProgress,
+    setSceneProgress,
+    setTransitionProgress,
+  } = useEnvironment();
 
   useEffect(() => {
     if (reducedMotion) return;
@@ -39,22 +48,24 @@ const WorldStateControllerComponent = () => {
       const progress = maxScroll > 0 ? window.scrollY / maxScroll : 0;
       setProgress(progress);
 
-      let closestId = missionNodes[0].id;
-      let closestDistance = Number.POSITIVE_INFINITY;
-
-      missionNodes.forEach((node) => {
-        const element = document.querySelector(`[data-mission-node="${node.id}"]`);
-        if (!element) return;
-        const rect = element.getBoundingClientRect();
-        const distance = Math.abs(rect.top + rect.height * 0.42 - window.innerHeight * 0.5);
-        if (distance < closestDistance) {
-          closestDistance = distance;
-          closestId = node.id;
-        }
-      });
+      const scaledProgress = progress * (missionNodes.length - 1);
+      const nextIndex = Math.min(
+        missionNodes.length - 1,
+        Math.max(0, Math.round(scaledProgress)),
+      );
+      const segmentIndex = Math.min(
+        missionNodes.length - 2,
+        Math.max(0, Math.floor(scaledProgress)),
+      );
+      const localProgress = scaledProgress - segmentIndex;
+      const transitionPressure = Math.sin(Math.min(Math.max(localProgress, 0), 1) * Math.PI);
+      const closestId = missionNodes[nextIndex].id;
 
       setActiveNode(closestId);
-      if (!holdNode) {
+      setSceneProgress(Math.min(Math.max(localProgress, 0), 1));
+      setTransitionProgress(transitionPressure);
+
+      if (!holdNode && activatedNode !== closestId) {
         if (closestId === "operations") setMode("breach");
         else if (closestId === "boot") setMode("idle");
         else setMode("scan");
@@ -78,7 +89,15 @@ const WorldStateControllerComponent = () => {
       window.removeEventListener("scroll", requestUpdate);
       window.removeEventListener("resize", requestUpdate);
     };
-  }, [holdNode, setActiveNode, setMode, setProgress]);
+  }, [
+    activatedNode,
+    holdNode,
+    setActiveNode,
+    setMode,
+    setProgress,
+    setSceneProgress,
+    setTransitionProgress,
+  ]);
 
   return null;
 };

@@ -14,7 +14,8 @@ const telemetry = [
 ];
 
 const IntelligenceAtmosphereComponent = () => {
-  const { activeNode, holdNode, intensity, mode, progress } = useEnvironment();
+  const { activeNode, holdNode, intensity, mode, progress, sceneProgress, transitionProgress } =
+    useEnvironment();
   const node = missionNodes.find((item) => item.id === activeNode) ?? missionNodes[0];
   const isAlert = mode === "breach";
 
@@ -33,9 +34,9 @@ const IntelligenceAtmosphereComponent = () => {
 
       <motion.div
         animate={{
-          opacity: isAlert ? 0.52 : 0.34 + intensity * 0.18,
-          scale: 1 + progress * 0.1 + intensity * 0.06,
-          x: holdNode ? 18 : 0,
+          opacity: isAlert ? 0.46 + transitionProgress * 0.12 : 0.3 + intensity * 0.16 + transitionProgress * 0.1,
+          scale: 1 + progress * 0.08 + intensity * 0.05 + transitionProgress * 0.04,
+          x: holdNode ? 18 : (sceneProgress - 0.5) * 34,
         }}
         className="absolute left-1/2 top-[-18rem] h-[52rem] w-[82rem] -translate-x-1/2 rounded-[50%] blur-[86px]"
         style={{
@@ -46,10 +47,10 @@ const IntelligenceAtmosphereComponent = () => {
 
       <motion.div
         animate={{
-          opacity: 0.42 + intensity * 0.24,
-          rotateX: 64 - intensity * 6,
-          scale: 1 + progress * 0.12,
-          y: progress * -70,
+          opacity: 0.36 + intensity * 0.2 + transitionProgress * 0.18,
+          rotateX: 64 - intensity * 6 - transitionProgress * 8,
+          scale: 1 + progress * 0.1 + transitionProgress * 0.07,
+          y: progress * -70 - transitionProgress * 30,
         }}
         className="absolute bottom-[-17rem] left-1/2 h-[42rem] w-[95rem] -translate-x-1/2 rounded-[50%] border border-white/10 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.08),transparent_58%)]"
         transition={{ duration: 1.1, ease: premiumEase }}
@@ -57,9 +58,9 @@ const IntelligenceAtmosphereComponent = () => {
 
       <motion.div
         animate={{
-          opacity: isAlert ? 0.42 : 0.24,
-          rotate: isAlert ? -6 : 0,
-          scale: 1 + intensity * 0.08,
+          opacity: isAlert ? 0.42 : 0.22 + transitionProgress * 0.16,
+          rotate: isAlert ? -6 : (sceneProgress - 0.5) * 4,
+          scale: 1 + intensity * 0.06 + transitionProgress * 0.08,
         }}
         className="intelligence-grid absolute inset-x-[-10%] bottom-[-4rem] h-[68vh] origin-bottom"
         transition={{ duration: 0.9, ease: premiumEase }}
@@ -67,9 +68,9 @@ const IntelligenceAtmosphereComponent = () => {
 
       <motion.div
         animate={{
-          opacity: 0.58 + intensity * 0.22,
+          opacity: 0.42 + intensity * 0.18 + transitionProgress * 0.22,
           rotate: holdNode ? 18 : 0,
-          scale: 1 + intensity * 0.16,
+          scale: 1 + intensity * 0.12 + transitionProgress * 0.1,
         }}
         className="absolute left-1/2 top-[18vh] h-[34rem] w-[34rem] -translate-x-1/2 rounded-full border border-white/10"
         transition={{ duration: 1.1, ease: premiumEase }}

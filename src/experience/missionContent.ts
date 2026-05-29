@@ -12,14 +12,15 @@ export const missionNodes: MissionNode[] = [
     label: "Boot Sequence",
     title: "Cyber Intelligence Operating System",
     dek: "Enter an active defense environment where portfolio data behaves like classified mission intelligence.",
-    holdLabel: "CLICK & HOLD TO INITIALIZE",
+    holdLabel: "PRESS, HOLD, RELEASE TO INITIALIZE",
     narration:
-      "Cyber intelligence operating system online. Environment stabilized. Awaiting mission authorization.",
+      "Threat mapping complete. Identity reconstruction is ready. Welcome to the intelligence archive.",
     ambient: {
       primary: "#5B21B6",
       secondary: "#38BDF8",
       alert: "#B7FF2A",
     },
+    artifact: "core",
     signal: ["Neural archive waking", "Telemetry silent", "Defense layer idle"],
     intel: [
       { label: "Operator", value: SITE.name },
@@ -33,14 +34,15 @@ export const missionNodes: MissionNode[] = [
     label: "Identity Scan",
     title: "Reconstructing Operator Profile",
     dek: "The system scans academic identity, location, interests, and current cybersecurity trajectory.",
-    holdLabel: "HOLD TO ACCESS IDENTITY SCAN",
+    holdLabel: "PRESS, HOLD, RELEASE TO SCAN",
     narration:
-      "Identity scan initialized. Operator Manas Ranjan Rao. Computer science student in Germany. Cybersecurity trajectory confirmed.",
+      "Identity reconstruction initiated. Manas Ranjan Rao is pursuing computer science in Germany, with a growing focus on security operations and secure systems.",
     ambient: {
       primary: "#7C3AED",
       secondary: "#22D3EE",
       alert: "#B7FF2A",
     },
+    artifact: "scanner",
     signal: ["BSc Computer Science", "IUBH Bad Honnef", "Germany / Remote"],
     intel: [
       { label: "Degree", value: SITE.education.degree },
@@ -54,14 +56,15 @@ export const missionNodes: MissionNode[] = [
     label: "Arsenal Database",
     title: "Mapping Technical Capabilities",
     dek: "Skills are organized as live operating layers: interface, data, security tooling, and delivery systems.",
-    holdLabel: "CLICK & HOLD TO DECRYPT ARSENAL",
+    holdLabel: "PRESS, HOLD, RELEASE TO DECRYPT",
     narration:
-      "Arsenal database decrypted. React, TypeScript, Python, Linux, Wireshark, Nmap, and security tooling indexed.",
+      "The arsenal database is opening. Interface engineering, Python automation, Linux workflows, and reconnaissance tooling are now indexed.",
     ambient: {
       primary: "#0EA5E9",
       secondary: "#A855F7",
       alert: "#FB7185",
     },
+    artifact: "construct",
     signal: skillSignal,
     intel: [
       { label: "Frontend", value: "React / TypeScript / Tailwind" },
@@ -75,14 +78,15 @@ export const missionNodes: MissionNode[] = [
     label: "Operations Archive",
     title: "Reviewing Active Field Work",
     dek: "Projects appear as operations: recon interfaces, vault concepts, and threat intelligence dashboards.",
-    holdLabel: "HOLD TO ACCESS OPERATIONS ARCHIVE",
+    holdLabel: "PRESS, HOLD, RELEASE TO OPEN ARCHIVE",
     narration:
-      "Operations archive active. Network vulnerability scanner. Secure password vault. Threat intelligence dashboard. Severity classification complete.",
+      "Operations archive unlocked. Reconnaissance tools, vault experiments, and threat intelligence interfaces are arranged for review.",
     ambient: {
       primary: "#BE123C",
       secondary: "#7C3AED",
       alert: "#FB7185",
     },
+    artifact: "vault",
     signal: PROJECTS.map((project) => `${project.codename}: ${project.title}`),
     intel: PROJECTS.map((project) => ({
       label: `${project.status} / ${project.severity}`,
@@ -95,14 +99,15 @@ export const missionNodes: MissionNode[] = [
     label: "Classified Intelligence File",
     title: "Compiling Recruiter Briefing",
     dek: "The portfolio compresses into a concise intelligence file: learning evidence, work mode, and contact readiness.",
-    holdLabel: "CLICK & HOLD TO OPEN FILE",
+    holdLabel: "PRESS, HOLD, RELEASE TO OPEN FILE",
     narration:
-      "Classified intelligence file opened. Internship signal active. Operator available for cybersecurity roles in Germany or remote.",
+      "The intelligence file is open. Internship signal active, with availability for cybersecurity-focused roles in Germany or remote.",
     ambient: {
       primary: "#581C87",
       secondary: "#F472B6",
       alert: "#B7FF2A",
     },
+    artifact: "dossier",
     signal: ["Internship readiness", "Secure web apps", "SOC workflows"],
     intel: [
       { label: "Seeking", value: "Cybersecurity internships" },
@@ -116,14 +121,15 @@ export const missionNodes: MissionNode[] = [
     label: "Secure Transmission Channel",
     title: "Open Encrypted Contact Link",
     dek: "The final state opens a secure line for internships, collaborations, or cybersecurity-focused frontend work.",
-    holdLabel: "HOLD TO OPEN SECURE CHANNEL",
+    holdLabel: "PRESS, HOLD, RELEASE TO TRANSMIT",
     narration:
-      "Secure transmission channel open. Contact endpoint verified. Awaiting message from authorized recruiter or collaborator.",
+      "Secure transmission channel established. The contact endpoint is verified and ready for a concise mission brief.",
     ambient: {
       primary: "#164E63",
       secondary: "#B7FF2A",
       alert: "#38BDF8",
     },
+    artifact: "beacon",
     signal: [SITE.email, "linkedin.com/in/manas-ranjan-rao", "github.com/LLawliet188"],
     intel: [
       { label: "Email", value: SITE.email },

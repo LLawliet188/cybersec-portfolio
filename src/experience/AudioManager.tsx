@@ -1,20 +1,24 @@
 import { memo, useCallback, useEffect, useMemo, useRef } from "react";
 import { Howl, Howler } from "howler";
 import { useEnvironment } from "./EnvironmentProvider";
+import { createNarrationUtterance } from "./NarrationManager";
 import type { MissionNode } from "./types";
 
 type AudioManagerProps = {
   activeNarration?: MissionNode | null;
   enabled: boolean;
   setEnabled: (enabled: boolean) => void;
+  volume: number;
 };
 
 type AudioApi = {
   enabled: boolean;
-  playInterface: (type: "hover" | "click" | "hold") => void;
+  playInterface: (type: InterfaceSound) => void;
   setEnabled: (enabled: boolean) => void;
   toggle: () => void;
 };
+
+type InterfaceSound = "cancel" | "click" | "hold" | "hover" | "unlock";
 
 export const createTone = (frequency: number, duration = 0.18) => {
   const sampleRate = 22050;
@@ -64,8 +68,9 @@ const AudioManagerComponent = ({
   activeNarration,
   enabled,
   setEnabled,
+  volume,
 }: AudioManagerProps) => {
-  const { intensity, mode } = useEnvironment();
+  const { intensity, mode, transitionProgress } = useEnvironment();
   const ambienceRef = useRef<{
     context: AudioContext;
     gain: GainNode;
@@ -77,9 +82,11 @@ const AudioManagerComponent = ({
 
   const sounds = useMemo(
     () => ({
-      hover: new Howl({ src: [createTone(920, 0.11)], volume: 0.12 }),
-      click: new Howl({ src: [createTone(420, 0.16)], volume: 0.18 }),
-      hold: new Howl({ src: [createTone(128, 0.34)], volume: 0.22 }),
+      cancel: new Howl({ src: [createTone(180, 0.12)], volume: 0.055 }),
+      click: new Howl({ src: [createTone(520, 0.14)], volume: 0.08 }),
+      hold: new Howl({ src: [createTone(260, 0.22)], volume: 0.07 }),
+      hover: new Howl({ src: [createTone(820, 0.08)], volume: 0.035 }),
+      unlock: new Howl({ src: [createTone(680, 0.32)], volume: 0.1 }),
     }),
     [],
   );
@@ -96,12 +103,12 @@ const AudioManagerComponent = ({
     const oscillatorA = context.createOscillator();
     const oscillatorB = context.createOscillator();
 
-    oscillatorA.type = "sawtooth";
-    oscillatorB.type = "sine";
-    oscillatorA.frequency.value = 38;
-    oscillatorB.frequency.value = 74;
+    oscillatorA.type = "sine";
+    oscillatorB.type = "triangle";
+    oscillatorA.frequency.value = 44;
+    oscillatorB.frequency.value = 91;
     filter.type = "lowpass";
-    filter.frequency.value = 520;
+    filter.frequency.value = 440;
     gain.gain.value = 0;
 
     oscillatorA.connect(filter);
@@ -116,7 +123,7 @@ const AudioManagerComponent = ({
   }, []);
 
   const playInterface = useCallback(
-    (type: "hover" | "click" | "hold") => {
+    (type: InterfaceSound) => {
       if (!enabled) return;
       sounds[type].stop();
       sounds[type].play();
@@ -130,6 +137,7 @@ const AudioManagerComponent = ({
 
   useEffect(() => {
     Howler.mute(!enabled);
+    Howler.volume(Math.min(Math.max(volume, 0), 1));
     if (!enabled) {
       window.speechSynthesis?.cancel();
       const ambience = ambienceRef.current;
@@ -145,7 +153,7 @@ const AudioManagerComponent = ({
 
     const ambience = ensureAmbience();
     void ambience.context.resume().catch(() => undefined);
-  }, [enabled, ensureAmbience]);
+  }, [enabled, ensureAmbience, volume]);
 
   useEffect(() => {
     if (!enabled || !ambienceRef.current || ambienceRef.current.context.state === "closed") {
@@ -154,33 +162,40 @@ const AudioManagerComponent = ({
 
     const ambience = ambienceRef.current;
     const now = ambience.context.currentTime;
-    const target = mode === "idle" ? 0.015 : 0.035 + intensity * 0.075;
+    const target =
+      (mode === "idle" ? 0.006 : 0.012 + intensity * 0.026 + transitionProgress * 0.012) *
+      volume;
     ambience.gain.gain.setTargetAtTime(target, now, 0.4);
     ambience.filter.frequency.setTargetAtTime(
-      mode === "breach" ? 1280 : mode === "intelligence" ? 920 : 540,
+      mode === "breach" ? 860 : mode === "intelligence" ? 680 : 420,
       now,
       0.35,
     );
-    ambience.oscillatorA.frequency.setTargetAtTime(38 + intensity * 18, now, 0.5);
-    ambience.oscillatorB.frequency.setTargetAtTime(74 + intensity * 36, now, 0.5);
-  }, [enabled, intensity, mode]);
+    ambience.oscillatorA.frequency.setTargetAtTime(
+      40 + intensity * 8 + transitionProgress * 6,
+      now,
+      0.5,
+    );
+    ambience.oscillatorB.frequency.setTargetAtTime(
+      82 + intensity * 18 + transitionProgress * 10,
+      now,
+      0.5,
+    );
+  }, [enabled, intensity, mode, transitionProgress, volume]);
 
   useEffect(() => {
     if (!enabled || !activeNarration) return;
 
     window.speechSynthesis?.cancel();
-    const utterance = new SpeechSynthesisUtterance(activeNarration.narration);
-    utterance.pitch = 0.55;
-    utterance.rate = 0.82;
-    utterance.volume = 0.78;
+    const utterance = createNarrationUtterance(activeNarration.narration, volume);
     utteranceRef.current = utterance;
-    window.speechSynthesis?.speak(utterance);
+    window.setTimeout(() => window.speechSynthesis?.speak(utterance), 180);
 
     return () => {
       window.speechSynthesis?.cancel();
       utteranceRef.current = null;
     };
-  }, [activeNarration, enabled]);
+  }, [activeNarration, enabled, volume]);
 
   useEffect(() => {
     window.cyberAudio = {

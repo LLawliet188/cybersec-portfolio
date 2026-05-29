@@ -13,6 +13,10 @@ import { motion } from "framer-motion";
 import { useEnvironment } from "./EnvironmentProvider";
 import type { MissionNode } from "./types";
 
+const activationThreshold = 0.72;
+const minimumHoldMs = 680;
+const chargeDuration = 0.95;
+
 type InteractionControllerProps = {
   children: (state: {
     holdProgress: number;
@@ -38,11 +42,13 @@ const InteractionControllerComponent = ({
   node,
   onNarration,
 }: InteractionControllerProps) => {
-  const { setHoldNode, setIntensity, setMode } = useEnvironment();
+  const { setActivatedNode, setHoldNode, setIntensity, setMode } = useEnvironment();
   const [holdProgress, setHoldProgress] = useState(0);
   const [isDecrypted, setIsDecrypted] = useState(false);
   const progressRef = useRef({ value: 0 });
   const tweenRef = useRef<gsap.core.Tween | null>(null);
+  const isHoldingRef = useRef(false);
+  const holdStartedAtRef = useRef(0);
 
   useEffect(() => {
     return () => {
@@ -50,32 +56,67 @@ const InteractionControllerComponent = ({
     };
   }, []);
 
+  useEffect(() => {
+    tweenRef.current?.kill();
+    progressRef.current.value = 0;
+    isHoldingRef.current = false;
+    holdStartedAtRef.current = 0;
+    setHoldProgress(0);
+    setIsDecrypted(false);
+  }, [node.id]);
+
   const startHold = useCallback(() => {
+    isHoldingRef.current = true;
+    holdStartedAtRef.current = window.performance.now();
     window.cyberAudio?.playInterface("hold");
     tweenRef.current?.kill();
     setHoldNode(node.id);
-    setMode(node.id === "operations" ? "breach" : "intelligence");
-    onNarration(node);
+    setMode("scan");
+    setIsDecrypted(false);
+    onNarration(null);
 
     tweenRef.current = gsap.to(progressRef.current, {
-      duration: 1.2,
+      duration: chargeDuration,
       ease: "power3.out",
       value: 1,
       onUpdate: () => {
         setHoldProgress(progressRef.current.value);
-        setIntensity(progressRef.current.value);
+        setIntensity(progressRef.current.value * 0.72);
       },
-      onComplete: () => setIsDecrypted(true),
     });
-  }, [node, onNarration, setHoldNode, setIntensity, setMode]);
+  }, [node.id, onNarration, setHoldNode, setIntensity, setMode]);
 
   const endHold = useCallback(() => {
+    if (!isHoldingRef.current) return;
+    isHoldingRef.current = false;
     tweenRef.current?.kill();
     setHoldNode(null);
+    const elapsed = window.performance.now() - holdStartedAtRef.current;
+    const shouldActivate =
+      progressRef.current.value >= activationThreshold || elapsed >= minimumHoldMs;
+
+    if (shouldActivate) {
+      window.cyberAudio?.playInterface("unlock");
+      setActivatedNode(node.id);
+      setIsDecrypted(true);
+      setMode(node.id === "operations" ? "breach" : "intelligence");
+      setIntensity(1);
+      onNarration(node);
+
+      tweenRef.current = gsap.to(progressRef.current, {
+        duration: 0.52,
+        ease: "power2.out",
+        value: 1,
+        onUpdate: () => setHoldProgress(progressRef.current.value),
+      });
+      return;
+    }
+
+    window.cyberAudio?.playInterface("cancel");
     onNarration(null);
 
     tweenRef.current = gsap.to(progressRef.current, {
-      duration: 0.85,
+      duration: 0.48,
       ease: "power2.out",
       value: 0,
       onUpdate: () => {
@@ -84,10 +125,12 @@ const InteractionControllerComponent = ({
       },
       onComplete: () => setMode("scan"),
     });
-  }, [onNarration, setHoldNode, setIntensity, setMode]);
+  }, [node, onNarration, setActivatedNode, setHoldNode, setIntensity, setMode]);
 
   const startPointerHold = (event: PointerEvent<HTMLButtonElement>) => {
-    event.currentTarget.setPointerCapture(event.pointerId);
+    if (event.currentTarget.setPointerCapture) {
+      event.currentTarget.setPointerCapture(event.pointerId);
+    }
     startHold();
   };
 
