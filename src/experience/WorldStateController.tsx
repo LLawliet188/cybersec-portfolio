@@ -6,7 +6,7 @@ import { useEnvironment } from "./EnvironmentProvider";
 const WorldStateControllerComponent = () => {
   const {
     activatedNode,
-    holdNode,
+    focusedNode,
     reducedMotion,
     setActiveNode,
     setMode,
@@ -65,7 +65,7 @@ const WorldStateControllerComponent = () => {
       setSceneProgress(Math.min(Math.max(localProgress, 0), 1));
       setTransitionProgress(transitionPressure);
 
-      if (!holdNode && activatedNode !== closestId) {
+      if (!focusedNode && activatedNode !== closestId) {
         if (closestId === "operations") setMode("breach");
         else if (closestId === "boot") setMode("idle");
         else setMode("scan");
@@ -91,7 +91,7 @@ const WorldStateControllerComponent = () => {
     };
   }, [
     activatedNode,
-    holdNode,
+    focusedNode,
     setActiveNode,
     setMode,
     setProgress,

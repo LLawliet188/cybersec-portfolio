@@ -3,7 +3,7 @@ import { motion, useMotionValue, useSpring } from "framer-motion";
 import { useEnvironment } from "./EnvironmentProvider";
 
 const TacticalCursorComponent = () => {
-  const { holdNode, intensity, mode } = useEnvironment();
+  const { focusedNode, intensity, mode } = useEnvironment();
   const [isFinePointer, setIsFinePointer] = useState(false);
   const x = useMotionValue(-100);
   const y = useMotionValue(-100);
@@ -49,15 +49,15 @@ const TacticalCursorComponent = () => {
       <motion.div
         animate={{
           borderColor: color,
-          boxShadow: `0 0 ${holdNode ? 34 : 18}px ${color}`,
+          boxShadow: `0 0 ${focusedNode ? 34 : 18}px ${color}`,
           scale: 1 + intensity * 0.28,
         }}
         className="absolute inset-0 rounded-full border"
       />
       <motion.div
-        animate={{ rotate: holdNode ? 180 : 360 }}
+        animate={{ rotate: focusedNode ? 180 : 360 }}
         className="absolute inset-3 rounded-full border border-dashed border-white/35"
-        transition={{ duration: holdNode ? 1.8 : 8, ease: "linear", repeat: Infinity }}
+        transition={{ duration: focusedNode ? 1.8 : 8, ease: "linear", repeat: Infinity }}
       />
       <span className="absolute left-1/2 top-0 h-3 w-px -translate-x-1/2 bg-white/60" />
       <span className="absolute bottom-0 left-1/2 h-3 w-px -translate-x-1/2 bg-white/60" />

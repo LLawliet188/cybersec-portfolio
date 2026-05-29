@@ -19,7 +19,7 @@ const MissionHudComponent = ({
   setVolume,
   volume,
 }: MissionHudProps) => {
-  const { activeNode, holdNode, mode, progress } = useEnvironment();
+  const { activeNode, focusedNode, mode, progress } = useEnvironment();
   const activeIndex = missionNodes.findIndex((node) => node.id === activeNode);
   const active = missionNodes[activeIndex] ?? missionNodes[0];
 
@@ -89,7 +89,7 @@ const MissionHudComponent = ({
             </button>
             <div className="hidden items-center gap-2 rounded-full border border-white/12 bg-white/[0.035] px-3 py-2 font-mono text-[9px] uppercase tracking-[0.2em] text-white/58 backdrop-blur-xl sm:flex">
               <Headphones size={13} />
-              <span>{holdNode ? "narrating" : mode}</span>
+              <span>{focusedNode ? "object focus" : mode}</span>
             </div>
             <label className="hidden items-center gap-2 rounded-full border border-white/12 bg-white/[0.035] px-3 py-2 backdrop-blur-xl lg:flex">
               <span className="sr-only">Cinematic audio volume</span>

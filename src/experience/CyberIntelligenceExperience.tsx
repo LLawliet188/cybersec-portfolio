@@ -13,8 +13,8 @@ import { TacticalCursor } from "./TacticalCursor";
 import type { MissionNode } from "./types";
 import { WorldStateController } from "./WorldStateController";
 
-const ParticleEngine = lazy(() =>
-  import("./ParticleEngine").then((module) => ({ default: module.ParticleEngine })),
+const World3DScene = lazy(() =>
+  import("./World3DScene").then((module) => ({ default: module.World3DScene })),
 );
 
 const MissionEndcap = memo(() => (
@@ -59,7 +59,7 @@ const ExperienceInner = () => {
           <WorldStateController />
           <IntelligenceAtmosphere />
           <Suspense fallback={null}>
-            <ParticleEngine />
+            <World3DScene onNarration={setActiveNarration} />
           </Suspense>
           <TacticalCursor />
           <MissionHud
@@ -70,7 +70,7 @@ const ExperienceInner = () => {
           />
           <NarrationSystem activeNarration={activeNarration} />
 
-          <main className="relative z-10">
+          <main className="pointer-events-none relative z-10">
             <SceneManager onNarration={setActiveNarration} />
           </main>
 

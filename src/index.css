@@ -155,19 +155,6 @@ textarea {
   mask-image: linear-gradient(180deg, transparent 0%, black 28%, black 74%, transparent 100%);
 }
 
-.hold-control::after {
-  position: absolute;
-  inset: 0;
-  content: "";
-  background: linear-gradient(110deg, transparent 0%, rgba(255, 255, 255, 0.16) 48%, transparent 62%);
-  transform: translateX(-120%);
-  transition: transform 900ms cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.hold-control:hover::after {
-  transform: translateX(120%);
-}
-
 .intel-plane {
   position: relative;
   overflow: hidden;
@@ -193,91 +180,6 @@ textarea {
   position: relative;
   overflow: hidden;
   backdrop-filter: blur(12px);
-}
-
-.scene-artifact {
-  perspective: 1200px;
-  transform-style: preserve-3d;
-}
-
-.artifact-sweep {
-  background: conic-gradient(from 0deg, transparent 0deg, color-mix(in srgb, var(--node-alert) 52%, transparent) 38deg, transparent 80deg);
-  opacity: 0.28;
-  mask-image: radial-gradient(circle, transparent 0 52%, black 53%, black 56%, transparent 57%);
-}
-
-.artifact-body {
-  position: relative;
-  width: 46%;
-  aspect-ratio: 1;
-  overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  background:
-    radial-gradient(circle at 50% 42%, color-mix(in srgb, var(--node-alert) 44%, transparent), transparent 24%),
-    radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--node-secondary) 32%, transparent), transparent 48%),
-    linear-gradient(145deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.02));
-  transform-style: preserve-3d;
-  backdrop-filter: blur(18px);
-}
-
-.artifact-body::before,
-.artifact-body::after {
-  position: absolute;
-  content: "";
-  pointer-events: none;
-}
-
-.artifact-body::before {
-  inset: 16%;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.14), transparent 56%);
-}
-
-.artifact-body::after {
-  inset: -40%;
-  background: linear-gradient(115deg, transparent 34%, rgba(255, 255, 255, 0.2), transparent 58%);
-  animation: artifact-sheen 6s cubic-bezier(0.16, 1, 0.3, 1) infinite;
-}
-
-.artifact-core {
-  border-radius: 50%;
-}
-
-.artifact-scanner {
-  border-radius: 34% 66% 42% 58%;
-  clip-path: polygon(50% 0, 90% 24%, 90% 76%, 50% 100%, 10% 76%, 10% 24%);
-}
-
-.artifact-construct {
-  clip-path: polygon(50% 0, 100% 88%, 0 88%);
-}
-
-.artifact-vault {
-  border-radius: 18%;
-  clip-path: polygon(16% 0, 84% 0, 100% 50%, 84% 100%, 16% 100%, 0 50%);
-}
-
-.artifact-dossier {
-  width: 42%;
-  aspect-ratio: 0.72;
-  border-radius: 1.4rem;
-  transform: rotateZ(-6deg);
-}
-
-.artifact-beacon {
-  width: 38%;
-  clip-path: polygon(50% 0, 78% 28%, 100% 50%, 78% 72%, 50% 100%, 22% 72%, 0 50%, 22% 28%);
-}
-
-.artifact-strut {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 1px;
-  height: 56%;
-  transform-origin: 50% 0;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.42), transparent);
-  opacity: 0.42;
 }
 
 .secure-link {
@@ -351,23 +253,6 @@ textarea {
 
   50% {
     transform: translate3d(0, -10px, 0);
-  }
-}
-
-@keyframes artifact-sheen {
-  0%,
-  42% {
-    transform: translateX(-18%);
-    opacity: 0;
-  }
-
-  58% {
-    opacity: 0.72;
-  }
-
-  100% {
-    transform: translateX(34%);
-    opacity: 0;
   }
 }
 

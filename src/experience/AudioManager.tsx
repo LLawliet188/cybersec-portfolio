@@ -79,6 +79,7 @@ const AudioManagerComponent = ({
     filter: BiquadFilterNode;
   } | null>(null);
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const narrationRef = useRef<Howl | null>(null);
 
   const sounds = useMemo(
     () => ({
@@ -186,14 +187,33 @@ const AudioManagerComponent = ({
   useEffect(() => {
     if (!enabled || !activeNarration) return;
 
+    narrationRef.current?.stop();
+    narrationRef.current?.unload();
     window.speechSynthesis?.cancel();
-    const utterance = createNarrationUtterance(activeNarration.narration, volume);
-    utteranceRef.current = utterance;
-    window.setTimeout(() => window.speechSynthesis?.speak(utterance), 180);
+    const narration = new Howl({
+      html5: true,
+      onloaderror: () => {
+        const utterance = createNarrationUtterance(activeNarration.narration, volume);
+        utteranceRef.current = utterance;
+        window.setTimeout(() => window.speechSynthesis?.speak(utterance), 180);
+      },
+      onplayerror: () => {
+        const utterance = createNarrationUtterance(activeNarration.narration, volume);
+        utteranceRef.current = utterance;
+        window.setTimeout(() => window.speechSynthesis?.speak(utterance), 180);
+      },
+      src: [activeNarration.narrationSrc],
+      volume: Math.min(0.82, volume * 0.92),
+    });
+    narrationRef.current = narration;
+    narration.play();
 
     return () => {
+      narration.stop();
+      narration.unload();
       window.speechSynthesis?.cancel();
       utteranceRef.current = null;
+      if (narrationRef.current === narration) narrationRef.current = null;
     };
   }, [activeNarration, enabled, volume]);
 
@@ -213,6 +233,8 @@ const AudioManagerComponent = ({
   useEffect(() => {
     return () => {
       Object.values(sounds).forEach((sound) => sound.unload());
+      narrationRef.current?.stop();
+      narrationRef.current?.unload();
       window.speechSynthesis?.cancel();
       if (ambienceRef.current) {
         const ambience = ambienceRef.current;

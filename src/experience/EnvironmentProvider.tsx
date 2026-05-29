@@ -13,7 +13,7 @@ import type { EnvironmentMode, MissionId } from "./types";
 type EnvironmentState = {
   activatedNode: MissionId | null;
   activeNode: MissionId;
-  holdNode: MissionId | null;
+  focusedNode: MissionId | null;
   intensity: number;
   mode: EnvironmentMode;
   progress: number;
@@ -22,7 +22,7 @@ type EnvironmentState = {
   transitionProgress: number;
   setActivatedNode: (node: MissionId | null) => void;
   setActiveNode: (node: MissionId) => void;
-  setHoldNode: (node: MissionId | null) => void;
+  setFocusedNode: (node: MissionId | null) => void;
   setIntensity: (intensity: number) => void;
   setMode: (mode: EnvironmentMode) => void;
   setProgress: (progress: number) => void;
@@ -40,7 +40,7 @@ const getInitialReducedMotion = () =>
 const EnvironmentProviderComponent = ({ children }: { children: ReactNode }) => {
   const [activeNode, setActiveNode] = useState<MissionId>(missionNodes[0].id);
   const [activatedNode, setActivatedNode] = useState<MissionId | null>(null);
-  const [holdNode, setHoldNode] = useState<MissionId | null>(null);
+  const [focusedNode, setFocusedNode] = useState<MissionId | null>(null);
   const [intensity, setRawIntensity] = useState(0);
   const [mode, setMode] = useState<EnvironmentMode>("idle");
   const [progress, setRawProgress] = useState(0);
@@ -68,7 +68,7 @@ const EnvironmentProviderComponent = ({ children }: { children: ReactNode }) => 
     () => ({
       activatedNode,
       activeNode,
-      holdNode,
+      focusedNode,
       intensity,
       mode,
       progress,
@@ -77,7 +77,7 @@ const EnvironmentProviderComponent = ({ children }: { children: ReactNode }) => 
       transitionProgress,
       setActivatedNode,
       setActiveNode,
-      setHoldNode,
+      setFocusedNode,
       setIntensity,
       setMode,
       setProgress,
@@ -87,7 +87,7 @@ const EnvironmentProviderComponent = ({ children }: { children: ReactNode }) => 
     [
       activatedNode,
       activeNode,
-      holdNode,
+      focusedNode,
       intensity,
       mode,
       progress,

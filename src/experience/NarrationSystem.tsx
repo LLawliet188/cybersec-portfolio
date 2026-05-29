@@ -13,7 +13,7 @@ const NarrationSystemComponent = ({ activeNarration }: NarrationSystemProps) => 
       {activeNarration ? (
         <motion.div
           animate={{ opacity: 1, y: 0 }}
-          className="pointer-events-none fixed bottom-8 left-1/2 z-50 w-[min(44rem,calc(100vw-2rem))] -translate-x-1/2 border border-white/12 bg-black/45 px-5 py-4 text-center shadow-panel-depth backdrop-blur-xl"
+          className="pointer-events-none fixed bottom-5 left-4 right-4 z-50 border border-white/12 bg-black/45 px-5 py-4 text-left shadow-panel-depth backdrop-blur-xl sm:left-8 sm:right-auto sm:w-[min(30rem,calc(100vw-4rem))]"
           exit={{ opacity: 0, y: 18, transition: { duration: 0.45, ease: premiumEase } }}
           initial={{ opacity: 0, y: 18 }}
           transition={{ duration: 0.7, ease: premiumEase }}

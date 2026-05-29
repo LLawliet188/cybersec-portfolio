@@ -14,7 +14,7 @@ const telemetry = [
 ];
 
 const IntelligenceAtmosphereComponent = () => {
-  const { activeNode, holdNode, intensity, mode, progress, sceneProgress, transitionProgress } =
+  const { activeNode, focusedNode, intensity, mode, progress, sceneProgress, transitionProgress } =
     useEnvironment();
   const node = missionNodes.find((item) => item.id === activeNode) ?? missionNodes[0];
   const isAlert = mode === "breach";
@@ -36,7 +36,7 @@ const IntelligenceAtmosphereComponent = () => {
         animate={{
           opacity: isAlert ? 0.46 + transitionProgress * 0.12 : 0.3 + intensity * 0.16 + transitionProgress * 0.1,
           scale: 1 + progress * 0.08 + intensity * 0.05 + transitionProgress * 0.04,
-          x: holdNode ? 18 : (sceneProgress - 0.5) * 34,
+          x: focusedNode ? 18 : (sceneProgress - 0.5) * 34,
         }}
         className="absolute left-1/2 top-[-18rem] h-[52rem] w-[82rem] -translate-x-1/2 rounded-[50%] blur-[86px]"
         style={{
@@ -69,7 +69,7 @@ const IntelligenceAtmosphereComponent = () => {
       <motion.div
         animate={{
           opacity: 0.42 + intensity * 0.18 + transitionProgress * 0.22,
-          rotate: holdNode ? 18 : 0,
+          rotate: focusedNode ? 18 : 0,
           scale: 1 + intensity * 0.12 + transitionProgress * 0.1,
         }}
         className="absolute left-1/2 top-[18vh] h-[34rem] w-[34rem] -translate-x-1/2 rounded-full border border-white/10"
@@ -100,7 +100,7 @@ const IntelligenceAtmosphereComponent = () => {
         {telemetry.map((item, index) => (
           <motion.span
             animate={{
-              opacity: [0.12, holdNode ? 0.62 : 0.34, 0.12],
+              opacity: [0.12, focusedNode ? 0.62 : 0.34, 0.12],
               y: [0, -18 - index * 3, 0],
             }}
             className="absolute font-mono text-[9px] uppercase tracking-[0.28em] text-white/55"

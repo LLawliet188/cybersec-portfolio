@@ -12,9 +12,10 @@ export const missionNodes: MissionNode[] = [
     label: "Boot Sequence",
     title: "Cyber Intelligence Operating System",
     dek: "Enter an active defense environment where portfolio data behaves like classified mission intelligence.",
-    holdLabel: "PRESS, HOLD, RELEASE TO INITIALIZE",
+    interactionHint: "Click the intelligence core to initialize the archive.",
     narration:
       "Threat mapping complete. Identity reconstruction is ready. Welcome to the intelligence archive.",
+    narrationSrc: `${import.meta.env.BASE_URL}audio/narration/boot.mp3`,
     ambient: {
       primary: "#5B21B6",
       secondary: "#38BDF8",
@@ -34,9 +35,10 @@ export const missionNodes: MissionNode[] = [
     label: "Identity Scan",
     title: "Reconstructing Operator Profile",
     dek: "The system scans academic identity, location, interests, and current cybersecurity trajectory.",
-    holdLabel: "PRESS, HOLD, RELEASE TO SCAN",
+    interactionHint: "Click the identity lattice to reconstruct the operator profile.",
     narration:
       "Identity reconstruction initiated. Manas Ranjan Rao is pursuing computer science in Germany, with a growing focus on security operations and secure systems.",
+    narrationSrc: `${import.meta.env.BASE_URL}audio/narration/identity.mp3`,
     ambient: {
       primary: "#7C3AED",
       secondary: "#22D3EE",
@@ -56,9 +58,10 @@ export const missionNodes: MissionNode[] = [
     label: "Arsenal Database",
     title: "Mapping Technical Capabilities",
     dek: "Skills are organized as live operating layers: interface, data, security tooling, and delivery systems.",
-    holdLabel: "PRESS, HOLD, RELEASE TO DECRYPT",
+    interactionHint: "Click the cyber construct to decrypt the arsenal database.",
     narration:
       "The arsenal database is opening. Interface engineering, Python automation, Linux workflows, and reconnaissance tooling are now indexed.",
+    narrationSrc: `${import.meta.env.BASE_URL}audio/narration/arsenal.mp3`,
     ambient: {
       primary: "#0EA5E9",
       secondary: "#A855F7",
@@ -78,9 +81,10 @@ export const missionNodes: MissionNode[] = [
     label: "Operations Archive",
     title: "Reviewing Active Field Work",
     dek: "Projects appear as operations: recon interfaces, vault concepts, and threat intelligence dashboards.",
-    holdLabel: "PRESS, HOLD, RELEASE TO OPEN ARCHIVE",
+    interactionHint: "Click the neural vault to open active operations.",
     narration:
       "Operations archive unlocked. Reconnaissance tools, vault experiments, and threat intelligence interfaces are arranged for review.",
+    narrationSrc: `${import.meta.env.BASE_URL}audio/narration/operations.mp3`,
     ambient: {
       primary: "#BE123C",
       secondary: "#7C3AED",
@@ -99,9 +103,10 @@ export const missionNodes: MissionNode[] = [
     label: "Classified Intelligence File",
     title: "Compiling Recruiter Briefing",
     dek: "The portfolio compresses into a concise intelligence file: learning evidence, work mode, and contact readiness.",
-    holdLabel: "PRESS, HOLD, RELEASE TO OPEN FILE",
+    interactionHint: "Click the dossier object to compile the intelligence file.",
     narration:
       "The intelligence file is open. Internship signal active, with availability for cybersecurity-focused roles in Germany or remote.",
+    narrationSrc: `${import.meta.env.BASE_URL}audio/narration/file.mp3`,
     ambient: {
       primary: "#581C87",
       secondary: "#F472B6",
@@ -121,9 +126,10 @@ export const missionNodes: MissionNode[] = [
     label: "Secure Transmission Channel",
     title: "Open Encrypted Contact Link",
     dek: "The final state opens a secure line for internships, collaborations, or cybersecurity-focused frontend work.",
-    holdLabel: "PRESS, HOLD, RELEASE TO TRANSMIT",
+    interactionHint: "Click the beacon to open the secure transmission channel.",
     narration:
       "Secure transmission channel established. The contact endpoint is verified and ready for a concise mission brief.",
+    narrationSrc: `${import.meta.env.BASE_URL}audio/narration/transmission.mp3`,
     ambient: {
       primary: "#164E63",
       secondary: "#B7FF2A",

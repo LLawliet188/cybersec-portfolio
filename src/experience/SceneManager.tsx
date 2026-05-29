@@ -1,25 +1,15 @@
 import { memo, useEffect, useMemo, type CSSProperties } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowUpRight, FileText, Mail, Shield, Zap } from "lucide-react";
+import { ArrowUpRight, FileText, Mail, Shield } from "lucide-react";
 import { GithubMark, LinkedinMark } from "../components/social/SocialIcons";
 import { PROJECTS, SITE, SKILL_GROUPS } from "../content/siteContent";
 import { premiumEase } from "../utils/animation";
 import { useEnvironment } from "./EnvironmentProvider";
-import { InteractionController, type HoldInteractionBind } from "./InteractionController";
 import { missionNodes } from "./missionContent";
 import type { MissionNode } from "./types";
 
 type SceneManagerProps = {
   onNarration: (node: MissionNode | null) => void;
-};
-
-const artifactLabels: Record<MissionNode["artifact"], string> = {
-  beacon: "transmission beacon",
-  construct: "arsenal construct",
-  core: "intelligence core",
-  dossier: "classified dossier",
-  scanner: "identity lattice",
-  vault: "neural vault",
 };
 
 const ScrollRail = memo(() => (
@@ -38,122 +28,19 @@ const ScrollRail = memo(() => (
   </div>
 ));
 
-const ChargeTrigger = ({
-  ambient,
-  bind,
-  holdProgress,
-  label,
-}: {
-  ambient: MissionNode["ambient"];
-  bind: HoldInteractionBind;
-  holdProgress: number;
-  label: string;
-}) => (
-  <button
-    className="hold-control group relative mt-8 inline-flex w-full max-w-[24rem] items-center gap-4 overflow-hidden rounded-full border border-white/14 bg-white/[0.035] px-4 py-3 text-left font-mono text-[9px] uppercase tracking-[0.24em] text-primary backdrop-blur-2xl transition duration-500 hover:border-white/35 sm:w-auto sm:min-w-[23rem]"
-    style={{
-      boxShadow: `0 0 ${18 + holdProgress * 56}px ${ambient.secondary}3d`,
-    }}
-    type="button"
-    {...bind}
+const ObjectDirective = ({ node }: { node: MissionNode }) => (
+  <motion.div
+    animate={{ opacity: 1, y: 0 }}
+    className="mt-8 max-w-sm border-l border-white/16 pl-4"
+    initial={{ opacity: 0, y: 12 }}
+    transition={{ duration: 0.6, ease: premiumEase }}
   >
-    <span className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-white/18">
-      <motion.span
-        animate={{ rotate: holdProgress > 0 ? 280 : 360 }}
-        className="absolute inset-2 rounded-full border border-dashed border-white/45"
-        transition={{ duration: holdProgress > 0 ? 1 : 8, ease: "linear", repeat: Infinity }}
-      />
-      <svg className="absolute inset-0 h-full w-full -rotate-90" viewBox="0 0 48 48">
-        <motion.circle
-          animate={{ pathLength: holdProgress }}
-          cx="24"
-          cy="24"
-          fill="none"
-          r="21"
-          stroke={ambient.alert}
-          strokeLinecap="round"
-          strokeWidth="2"
-          transition={{ duration: 0.18, ease: "linear" }}
-        />
-      </svg>
-      <motion.span
-        animate={{ scale: 1 + holdProgress * 1.25, opacity: 0.72 - holdProgress * 0.18 }}
-        className="absolute h-3 w-3 rounded-full"
-        style={{ background: ambient.alert }}
-      />
-      <span className="relative h-1.5 w-1.5 rounded-full bg-white" />
-    </span>
-    <span className="relative z-10 leading-5">{label}</span>
-    <span className="ml-auto hidden font-mono text-[9px] text-white/42 sm:block">
-      {Math.round(holdProgress * 100)}%
-    </span>
-    <motion.span
-      className="absolute inset-y-0 left-0"
-      style={{
-        background: `linear-gradient(90deg, ${ambient.alert}22, ${ambient.secondary}12)`,
-        width: `${holdProgress * 100}%`,
-      }}
-    />
-  </button>
+    <p className="font-mono text-[9px] uppercase tracking-[0.24em] text-white/42">
+      Direct object interface
+    </p>
+    <p className="mt-2 font-body text-sm leading-6 text-white/62">{node.interactionHint}</p>
+  </motion.div>
 );
-
-const CyberArtifact = ({ node }: { node: MissionNode }) => {
-  const { activatedNode, intensity, sceneProgress, transitionProgress } = useEnvironment();
-  const isActivated = activatedNode === node.id;
-  const artifactClass = `artifact-${node.artifact}`;
-
-  return (
-    <motion.div
-      animate={{
-        opacity: 1,
-        rotateX: 58 - transitionProgress * 10,
-        rotateY: sceneProgress * 32 - 12,
-        scale: isActivated ? 1.08 : 1 + transitionProgress * 0.05,
-        y: Math.sin(sceneProgress * Math.PI) * -20,
-      }}
-      className="scene-artifact relative mx-auto flex aspect-square w-[min(82vw,34rem)] items-center justify-center"
-      initial={{ opacity: 0, scale: 0.9, y: 24 }}
-      transition={{ duration: 0.9, ease: premiumEase }}
-    >
-      <motion.div
-        animate={{ rotate: 360 }}
-        className="artifact-ring absolute inset-0 rounded-full border border-dashed border-white/18"
-        transition={{ duration: isActivated ? 18 : 34, ease: "linear", repeat: Infinity }}
-      />
-      <motion.div
-        animate={{ rotate: -360, scale: 1 + intensity * 0.08 }}
-        className="artifact-ring absolute inset-[12%] rounded-full border border-white/12"
-        transition={{ duration: isActivated ? 24 : 46, ease: "linear", repeat: Infinity }}
-      />
-      <motion.div
-        animate={{ rotate: 360 }}
-        className="artifact-sweep absolute inset-[4%] rounded-full"
-        transition={{ duration: isActivated ? 5 : 9, ease: "linear", repeat: Infinity }}
-      />
-
-      <motion.div
-        animate={{
-          boxShadow: `0 0 ${48 + intensity * 110}px ${node.ambient.secondary}66`,
-          filter: `saturate(${1 + intensity * 0.45})`,
-        }}
-        className={`artifact-body ${artifactClass}`}
-      >
-        {Array.from({ length: node.artifact === "vault" ? 7 : 5 }, (_, index) => (
-          <span
-            className="artifact-strut"
-            key={`${node.id}-strut-${index}`}
-            style={{ rotate: `${index * (360 / 5)}deg` }}
-          />
-        ))}
-      </motion.div>
-
-      <div className="absolute bottom-8 left-1/2 flex -translate-x-1/2 items-center gap-2 rounded-full border border-white/12 bg-black/20 px-3 py-2 font-mono text-[9px] uppercase tracking-[0.22em] text-white/48 backdrop-blur-xl">
-        <Zap size={12} />
-        {artifactLabels[node.artifact]}
-      </div>
-    </motion.div>
-  );
-};
 
 const SignalStream = ({ node }: { node: MissionNode }) => (
   <div className="max-w-sm space-y-4">
@@ -346,25 +233,29 @@ const SceneManagerComponent = ({ onNarration }: SceneManagerProps) => {
               <h1 className="mt-5 max-w-4xl font-display text-5xl font-bold uppercase leading-[0.92] text-primary sm:text-6xl lg:text-7xl">
                 {node.title}
               </h1>
-              <p className="mt-7 max-w-2xl font-body text-base leading-8 text-secondary sm:text-lg">
-                {node.dek}
-              </p>
+              {!isActivated ? (
+                <p className="mt-7 max-w-2xl font-body text-base leading-8 text-secondary sm:text-lg">
+                  {node.dek}
+                </p>
+              ) : null}
             </motion.div>
 
-            <InteractionController key={node.id} node={node} onNarration={onNarration}>
-              {({ bind, holdProgress }) => (
-                <ChargeTrigger
-                  ambient={node.ambient}
-                  bind={bind}
-                  holdProgress={holdProgress}
-                  label={node.holdLabel}
-                />
-              )}
-            </InteractionController>
+            {!isActivated ? <ObjectDirective node={node} /> : null}
           </div>
 
-          <div className="relative z-10 flex min-h-[28rem] items-center justify-center lg:min-h-[36rem]">
-            <CyberArtifact node={node} />
+          <div
+            aria-hidden="true"
+            className="pointer-events-none relative z-10 hidden min-h-[28rem] items-center justify-center lg:flex lg:min-h-[36rem]"
+          >
+            <motion.div
+              animate={{
+                opacity: 0.32 + transitionProgress * 0.26 + intensity * 0.16,
+                rotate: sceneProgress * 18,
+                scale: 1 + transitionProgress * 0.08,
+              }}
+              className="h-[28rem] w-[28rem] rounded-full border border-white/[0.06]"
+              transition={{ duration: 0.9, ease: premiumEase }}
+            />
           </div>
         </div>
 

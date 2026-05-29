@@ -14,8 +14,9 @@ export type MissionNode = {
   label: string;
   title: string;
   dek: string;
-  holdLabel: string;
+  interactionHint: string;
   narration: string;
+  narrationSrc: string;
   ambient: {
     primary: string;
     secondary: string;
