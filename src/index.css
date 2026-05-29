@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@400;500;600;700&family=Syne:wght@500;600;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700;800&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -6,8 +6,8 @@
 
 :root {
   color: #f0f4f8;
-  background: #080c10;
-  font-family: "DM Sans", system-ui, sans-serif;
+  background: #060a0e;
+  font-family: "Inter", system-ui, sans-serif;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -16,7 +16,7 @@
 
 html {
   scroll-behavior: smooth;
-  background: #080c10;
+  background: #060a0e;
 }
 
 body {
@@ -25,8 +25,9 @@ body {
   margin: 0;
   overflow-x: hidden;
   background:
-    radial-gradient(circle at 20% 10%, rgba(0, 200, 255, 0.06), transparent 32rem),
-    #080c10;
+    radial-gradient(ellipse at 50% 12%, rgba(168, 85, 247, 0.24), transparent 38rem),
+    radial-gradient(ellipse at 74% 18%, rgba(56, 189, 248, 0.14), transparent 32rem),
+    linear-gradient(180deg, #05040a 0%, #140727 42%, #020207 100%);
 }
 
 * {
@@ -47,6 +48,77 @@ a,
 input,
 textarea {
   -webkit-tap-highlight-color: transparent;
+}
+
+@layer components {
+  .micro-label {
+    @apply font-mono text-[10px] uppercase tracking-signal text-accent sm:text-xs;
+  }
+
+  .section-frame {
+    @apply relative scroll-mt-28 px-5 py-24 sm:px-8 lg:py-32;
+  }
+
+  .glass-panel {
+    @apply border border-white/10 bg-panel-gradient shadow-panel-depth backdrop-blur-xl;
+  }
+
+  .glass-interactive {
+    @apply transition duration-500 hover:border-accent/60 hover:shadow-cyan-sm;
+  }
+
+  .command-border {
+    position: relative;
+  }
+
+.command-border::before {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    z-index: -1;
+    border-radius: inherit;
+    background:
+      linear-gradient(135deg, rgba(168, 85, 247, 0.54), rgba(56, 189, 248, 0.18), transparent 62%),
+      linear-gradient(315deg, rgba(251, 113, 133, 0.28), transparent 46%);
+    opacity: 0.64;
+  }
+
+.signal-line {
+  background: linear-gradient(90deg, transparent, rgba(168, 85, 247, 0.74), rgba(56, 189, 248, 0.34), transparent);
+}
+}
+
+.ambient-noise {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.78' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='256' height='256' filter='url(%23noise)' opacity='0.42'/%3E%3C/svg%3E");
+}
+
+.scanline-mask {
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px);
+  background-size: 100% 7px, 64px 100%;
+}
+
+.radar-sweep {
+  transform-origin: center;
+  animation: radar-sweep 8s linear infinite;
+}
+
+.float-slow {
+  animation: float-slow 11s ease-in-out infinite;
+}
+
+.cinematic-grain {
+  background:
+    radial-gradient(circle at 50% 50%, transparent 0 44%, rgba(0, 0, 0, 0.34) 100%),
+    linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 5px;
+}
+
+.phase-pill {
+  background: #b7ff2a;
+  box-shadow: 0 0 22px rgba(183, 255, 42, 0.34);
+  color: #101106;
 }
 
 .terminal-cursor {
@@ -79,5 +151,37 @@ textarea {
   46%,
   100% {
     opacity: 0;
+  }
+}
+
+@keyframes radar-sweep {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes float-slow {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+
+  50% {
+    transform: translate3d(0, -10px, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
   }
 }

@@ -1,7 +1,8 @@
 import { memo } from "react";
 import { BadgeCheck } from "lucide-react";
 import { motion } from "framer-motion";
-import { CERTIFICATIONS_COPY } from "../content/siteContent";
+import { SectionHeader } from "../components/common/SectionHeader";
+import { CERTIFICATIONS_COPY, SECTION_LABELS } from "../content/siteContent";
 import { useReveal } from "../hooks/useReveal";
 import { revealContainer, revealItem } from "../utils/animation";
 
@@ -11,33 +12,50 @@ const CertificationsComponent = () => {
   return (
     <motion.section
       animate={isInView ? "visible" : "hidden"}
-      className="scroll-mt-28 px-5 py-12 sm:px-8"
+      className="section-frame py-16 lg:py-20"
       id="certifications"
       initial="hidden"
       ref={ref}
       variants={revealContainer}
     >
       <div className="mx-auto max-w-7xl">
+        <SectionHeader
+          heading={CERTIFICATIONS_COPY.heading}
+          label={SECTION_LABELS.certifications}
+        />
+
         <motion.div
-          className="flex flex-col gap-5 rounded-lg border border-white/10 bg-white/[0.03] p-6 backdrop-blur-xl sm:flex-row sm:items-center sm:justify-between"
+          className="command-border glass-panel grid overflow-hidden rounded-lg lg:grid-cols-[0.42fr_0.58fr]"
           variants={revealItem}
         >
-          <div className="flex items-start gap-4">
-            <div className="flex h-11 w-11 items-center justify-center rounded-md border border-white/10 bg-base/50 text-accent">
-              <BadgeCheck size={19} />
-            </div>
-            <div>
-              <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-accent">
-                {CERTIFICATIONS_COPY.eyebrow}
-              </p>
-              <h2 className="mt-1 font-display text-2xl font-semibold text-primary">
-                {CERTIFICATIONS_COPY.heading}
-              </h2>
+          <div className="border-b border-white/10 p-6 lg:border-b-0 lg:border-r sm:p-8">
+            <div className="flex items-start gap-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-md border border-white/10 bg-base/60 text-accent">
+                <BadgeCheck size={20} />
+              </div>
+              <div>
+                <p className="micro-label">{CERTIFICATIONS_COPY.eyebrow}</p>
+                <p className="mt-3 max-w-xl font-body text-sm leading-7 text-secondary">
+                  {CERTIFICATIONS_COPY.body}
+                </p>
+              </div>
             </div>
           </div>
-          <p className="max-w-2xl font-body text-sm leading-7 text-secondary">
-            {CERTIFICATIONS_COPY.body}
-          </p>
+          <div className="grid gap-3 p-5 sm:grid-cols-3 sm:p-6">
+            {CERTIFICATIONS_COPY.milestones.map((item) => (
+              <div
+                className="rounded-lg border border-white/10 bg-base/55 p-5"
+                key={item.label}
+              >
+                <p className="font-mono text-[10px] uppercase tracking-signal text-muted">
+                  {item.label}
+                </p>
+                <p className="mt-3 font-display text-lg font-semibold text-primary">
+                  {item.value}
+                </p>
+              </div>
+            ))}
+          </div>
         </motion.div>
       </div>
     </motion.section>

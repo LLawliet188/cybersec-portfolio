@@ -11,20 +11,20 @@ const OpportunityStripComponent = () => {
   return (
     <motion.section
       animate={isInView ? "visible" : "hidden"}
-      className="px-5 py-8 sm:px-8"
+      className="px-5 py-10 sm:px-8"
       initial="hidden"
       ref={ref}
       variants={revealContainer}
     >
       <motion.div
-        className="mx-auto flex max-w-7xl flex-col items-center justify-center gap-4 rounded-lg border border-accent/20 bg-gradient-to-r from-accent/10 via-interactive/10 to-accent/5 px-5 py-5 text-center backdrop-blur-xl sm:flex-row"
+        className="command-border glass-panel mx-auto flex max-w-7xl flex-col items-center justify-center gap-4 overflow-hidden rounded-lg px-5 py-6 text-center sm:flex-row"
         variants={revealItem}
       >
-        <p className="font-mono text-xs uppercase tracking-[0.16em] text-primary">
+        <p className="font-mono text-xs uppercase tracking-signal text-primary">
           {OPPORTUNITY.text}
         </p>
         <a
-          className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-[0.16em] text-accent transition hover:text-primary"
+          className="inline-flex items-center gap-2 rounded-md border border-accent/25 bg-accent/10 px-4 py-2 font-mono text-xs uppercase tracking-signal text-accent transition hover:border-accent/60 hover:text-primary"
           href="#contact"
         >
           {OPPORTUNITY.cta}

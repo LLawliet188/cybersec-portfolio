@@ -177,17 +177,17 @@ const TerminalSectionComponent = () => {
   return (
     <motion.section
       animate={isInView ? "visible" : "hidden"}
-      className="relative scroll-mt-28 px-5 py-24 sm:px-8"
+      className="section-frame"
       id="terminal"
       initial="hidden"
       ref={ref}
       variants={revealContainer}
     >
-      <div className="mx-auto max-w-5xl">
+      <div className="mx-auto max-w-7xl">
         <SectionHeader heading={TERMINAL_COPY.heading} label={SECTION_LABELS.terminal} />
 
         <motion.button
-          className="mb-5 inline-flex items-center gap-2 rounded-md border border-white/10 bg-white/[0.03] px-4 py-3 font-mono text-xs uppercase tracking-[0.14em] text-primary md:hidden"
+          className="mb-5 inline-flex items-center gap-2 rounded-md border border-white/10 bg-white/[0.04] px-4 py-3 font-mono text-xs uppercase tracking-signal text-primary md:hidden"
           onClick={() => setIsMobileOpen((value) => !value)}
           type="button"
           variants={revealItem}
@@ -197,14 +197,34 @@ const TerminalSectionComponent = () => {
         </motion.button>
 
         <motion.div
-          className={`${isMobileOpen ? "block" : "hidden"} md:block`}
+          className={`${isMobileOpen ? "grid" : "hidden"} gap-5 md:grid lg:grid-cols-[0.32fr_0.68fr]`}
           variants={revealItem}
         >
+          <div className="glass-panel hidden rounded-lg p-5 md:block">
+            <p className="micro-label">{TERMINAL_COPY.sidePanel.label}</p>
+            <h3 className="mt-3 font-display text-2xl font-semibold text-primary">
+              {TERMINAL_COPY.sidePanel.status}
+            </h3>
+            <div className="mt-6 grid gap-2">
+              {TERMINAL_COPY.sidePanel.lines.map((line) => (
+                <div
+                  className="flex items-center justify-between rounded-md border border-white/10 bg-base/55 px-3 py-2"
+                  key={line}
+                >
+                  <span className="font-mono text-[10px] uppercase tracking-signal text-secondary">
+                    {line}
+                  </span>
+                  <span className="h-1.5 w-1.5 rounded-full bg-accent" />
+                </div>
+              ))}
+            </div>
+          </div>
+
           <div
-            className="overflow-hidden rounded-lg border border-white/10 bg-[#070B0F]/90 shadow-2xl backdrop-blur-xl"
+            className="command-border glass-panel overflow-hidden rounded-lg bg-[#070B0F]/90"
             onClick={() => inputRef.current?.focus()}
           >
-            <div className="flex items-center gap-3 border-b border-white/10 bg-white/[0.03] px-5 py-3">
+            <div className="flex items-center gap-3 border-b border-white/10 bg-white/[0.04] px-5 py-3">
               <div className="flex gap-2">
                 <span className="h-3 w-3 rounded-full bg-[#FF5F57]" />
                 <span className="h-3 w-3 rounded-full bg-[#FFBD2E]" />
@@ -216,7 +236,7 @@ const TerminalSectionComponent = () => {
             </div>
 
             <div
-              className="terminal-scroll h-48 overflow-y-auto px-5 py-5 font-mono text-sm leading-7 text-secondary"
+              className="terminal-scroll h-56 overflow-y-auto px-5 py-5 font-mono text-sm leading-7 text-secondary"
               ref={outputRef}
             >
               {lines.map((line) => (
@@ -247,7 +267,7 @@ const TerminalSectionComponent = () => {
             </div>
           </div>
 
-          <p className="mt-4 text-center font-mono text-[10px] uppercase tracking-[0.16em] text-muted">
+          <p className="mt-4 text-center font-mono text-[10px] uppercase tracking-signal text-muted">
             {TERMINAL_COPY.hint}
           </p>
         </motion.div>

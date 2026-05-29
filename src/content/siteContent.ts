@@ -4,19 +4,29 @@ export type Skill = {
   name: string;
   icon: string;
   level: SkillLevel;
+  description: string;
 };
 
 export type SkillGroup = {
   label: string;
+  summary: string;
+  signal: string;
   skills: Skill[];
 };
 
 export type Project = {
   title: string;
+  codename: string;
   status: "ACTIVE" | "DEMO" | "ARCHIVED";
   severity: "HIGH" | "MED" | "LOW";
   description: string;
+  outcome: string;
   stack: string[];
+  metrics: Array<{
+    label: string;
+    value: string;
+  }>;
+  telemetry: string[];
   githubUrl: string;
   liveUrl: string;
 };
@@ -37,187 +47,317 @@ export const SITE = {
     github: "https://github.com/LLawliet188",
     linkedin: "https://www.linkedin.com/in/manas-ranjan-rao",
     email: "mailto:manasranjanrao188@gmail.com",
+    resume: "mailto:manasranjanrao188@gmail.com?subject=Resume%20Request",
   },
 };
 
 export const NAV_LINKS = [
   { label: "Home", href: "#home", id: "home" },
-  { label: "Skills", href: "#skills", id: "skills" },
-  { label: "Certifications", href: "#certifications", id: "certifications" },
+  { label: "About", href: "#about", id: "about" },
   { label: "Projects", href: "#projects", id: "projects" },
+  { label: "Skills", href: "#skills", id: "skills" },
   { label: "Contact", href: "#contact", id: "contact" },
 ];
 
 export const NAV_COPY = {
-  status: "[AVAILABLE FOR INTERNSHIP]",
+  status: "[INTERNSHIP SIGNAL OPEN]",
   openMenu: "Open navigation",
   closeMenu: "Close navigation",
+  soundOn: "Sound on",
+  soundOff: "Sound off",
+};
+
+export const ATMOSPHERE = {
+  fragments: ["PHASE 01", "SECURE SYSTEMS", "SOC SIGNAL", "ETHICAL HACKING", "REMOTE / GERMANY"],
 };
 
 export const HERO = {
-  credential: "// BSc Computer Science - IUBH Bad Honnef, Germany",
-  headingLines: ["Cybersecurity &", "Software Engineering Student"],
-  subheading:
-    "I build secure web experiences, study real-world attack surfaces, and turn cybersecurity learning into practical tools.",
-  ctas: {
-    primary: "View Projects",
-    secondary: "GitHub Profile",
-  },
-  stats: ["12 Projects", "8 Tools", "500+ Hours"],
-  panel: {
-    label: "SOC SIGNAL",
-    score: "98.7",
-    caption: "defense posture",
+  introTitle: "Welcome to the Cybersecurity Portfolio",
+  introSubtitle: "A cinematic digital field report for secure systems, ethical hacking, and product-minded engineering.",
+  introAction: "Click to enter",
+  introHint: "Headphones recommended",
+  eyebrow: "Phase 01",
+  nameKicker: "Portfolio / 2026",
+  phaseTitle: "Building secure digital systems",
+  identity: "Cybersecurity & Software Engineering Student",
+  positioning:
+    "A dark, cinematic portfolio world for cybersecurity learning, secure web apps, and practical security tooling.",
+  ctas: [
+    { label: "Find Out More", href: "#about", variant: "primary" },
+    { label: "GitHub", href: SITE.links.github, variant: "secondary" },
+    { label: "LinkedIn", href: SITE.links.linkedin, variant: "secondary" },
+    { label: "Resume", href: SITE.links.resume, variant: "ghost" },
+  ],
+  stats: [
+    { label: "Signal", value: "Security Tooling" },
+    { label: "Location", value: "Germany" },
+    { label: "Track", value: "BSc Computer Science" },
+  ],
+  commandPanel: {
+    label: "Orbital Signal",
+    status: "Listening",
+    title: "Security Field",
+    pulse: "42 signal nodes",
+    scoreLabel: "Readiness",
+    score: "94%",
     rows: [
       { label: "Recon", value: "mapped" },
-      { label: "Web surface", value: "hardened" },
-      { label: "Threat feed", value: "live" },
+      { label: "Web app", value: "hardened" },
+      { label: "Reporting", value: "clear" },
     ],
   },
 };
 
 export const SECTION_LABELS = {
-  about: "01 / ABOUT",
-  skills: "02 / SKILLS",
-  projects: "03 / PROJECTS",
-  terminal: "04 / TERMINAL",
-  contact: "05 / CONTACT",
+  about: "01 / ORIGIN",
+  projects: "02 / FIELD WORK",
+  skills: "03 / ARSENAL",
+  certifications: "04 / LEARNING",
+  terminal: "05 / CONSOLE",
+  contact: "06 / CONTACT",
 };
 
 export const ABOUT = {
-  heading: "Learning security by building, breaking, and documenting carefully.",
+  heading: "A security-focused builder learning through systems, labs, and product craft.",
   body:
-    "I am pursuing a BSc Computer Science degree from IUBH Bad Honnef while building a practical foundation in cybersecurity and modern web development. I am especially interested in network security, penetration testing, SOC workflows, secure web apps, and the discipline of writing clear remediation notes after every lab or project.",
+    "I am pursuing a BSc Computer Science degree from IUBH Bad Honnef while building a practical foundation in cybersecurity and modern web development. My work connects network security, penetration testing, SOC workflows, secure web apps, and careful remediation notes into one learning loop.",
   education: {
-    title: "Education",
+    title: "Academic Node",
     degree: "BSc Computer Science",
     institution: "IUBH Bad Honnef",
     location: "Germany",
     matriculationLabel: "Matriculation No.",
     matriculationNumber: "92017693",
   },
-  focusTitle: "Areas of Focus",
+  highlights: [
+    { label: "Primary Path", value: "Cybersecurity internships" },
+    { label: "Work Mode", value: "Germany / Remote" },
+    { label: "Approach", value: "Build, test, document" },
+  ],
+  focusTitle: "Operating Zones",
   focusAreas: [
     {
-      title: "Network Security",
-      description: "Traffic analysis, scanning workflows, and defensive visibility.",
+      title: "Network Visibility",
+      description: "Packet inspection, scan strategy, and defensive signal analysis.",
       icon: "network",
     },
     {
-      title: "Penetration Testing",
-      description: "Recon, exploit validation, and clear remediation reporting.",
+      title: "Ethical Hacking",
+      description: "Recon workflows, exploit validation, and responsible reporting.",
       icon: "scan",
     },
     {
-      title: "SOC Operations",
-      description: "Threat triage, event context, and severity classification.",
+      title: "SOC Thinking",
+      description: "Triage, severity labels, alert context, and incident notes.",
       icon: "shield",
     },
     {
-      title: "Secure Web Apps",
-      description: "Frontend systems designed with privacy and abuse cases in mind.",
+      title: "Secure Interfaces",
+      description: "Web experiences built with privacy, misuse cases, and clarity in mind.",
       icon: "lock",
     },
   ],
   timeline: [
-    { date: "2023", label: "CS Student" },
-    { date: "2024", label: "Web Dev" },
-    { date: "Now", label: "Cybersecurity Track" },
+    { date: "2023", label: "Computer Science", detail: "Core systems and programming" },
+    { date: "2024", label: "Web Engineering", detail: "React, TypeScript, UI systems" },
+    { date: "Now", label: "Cybersecurity Track", detail: "Labs, tools, secure products" },
   ],
 };
 
 export const SKILL_GROUPS: SkillGroup[] = [
   {
     label: "Frontend",
+    summary: "Interface systems with strong type safety, responsive layout, and motion polish.",
+    signal: "UI-LAYER",
     skills: [
-      { name: "React", icon: "react", level: "comfortable" },
-      { name: "TypeScript", icon: "typescript", level: "comfortable" },
-      { name: "TailwindCSS", icon: "tailwind", level: "comfortable" },
+      {
+        name: "React",
+        icon: "react",
+        level: "comfortable",
+        description: "Component architecture and interactive product interfaces.",
+      },
+      {
+        name: "TypeScript",
+        icon: "typescript",
+        level: "comfortable",
+        description: "Typed state, safer data contracts, and maintainable UI logic.",
+      },
+      {
+        name: "TailwindCSS",
+        icon: "tailwind",
+        level: "comfortable",
+        description: "Responsive systems, custom tokens, and fast visual iteration.",
+      },
     ],
   },
   {
     label: "Backend",
+    summary: "Application logic, persistence basics, and APIs that support security tooling.",
+    signal: "DATA-LAYER",
     skills: [
-      { name: "Python", icon: "python", level: "comfortable" },
-      { name: "SQL", icon: "sql", level: "learning" },
-      { name: "Node.js", icon: "node", level: "learning" },
+      {
+        name: "Python",
+        icon: "python",
+        level: "comfortable",
+        description: "Automation scripts, scanning workflows, and data processing.",
+      },
+      {
+        name: "SQL",
+        icon: "sql",
+        level: "learning",
+        description: "Schema thinking, querying, and storage for small tools.",
+      },
+      {
+        name: "Node.js",
+        icon: "node",
+        level: "learning",
+        description: "API experiments and JavaScript tooling foundations.",
+      },
     ],
   },
   {
     label: "Security",
+    summary: "Hands-on tooling for recon, traffic analysis, and vulnerability context.",
+    signal: "SEC-LAYER",
     skills: [
-      { name: "Wireshark", icon: "wireshark", level: "comfortable" },
-      { name: "Burp Suite", icon: "burp", level: "learning" },
-      { name: "Nmap", icon: "nmap", level: "comfortable" },
-      { name: "Linux", icon: "linux", level: "comfortable" },
+      {
+        name: "Wireshark",
+        icon: "wireshark",
+        level: "comfortable",
+        description: "Traffic inspection, packet patterns, and protocol-level clues.",
+      },
+      {
+        name: "Burp Suite",
+        icon: "burp",
+        level: "learning",
+        description: "Web testing workflows, proxy analysis, and request tampering labs.",
+      },
+      {
+        name: "Nmap",
+        icon: "nmap",
+        level: "comfortable",
+        description: "Recon scans, service discovery, and structured network reports.",
+      },
+      {
+        name: "Linux",
+        icon: "linux",
+        level: "comfortable",
+        description: "Terminal workflows, permissions, networking, and lab environments.",
+      },
     ],
   },
   {
     label: "Tools",
+    summary: "Reliable delivery habits for versioning, containers, and project hygiene.",
+    signal: "OPS-LAYER",
     skills: [
-      { name: "Git", icon: "git", level: "comfortable" },
-      { name: "Docker", icon: "docker", level: "learning" },
+      {
+        name: "Git",
+        icon: "git",
+        level: "comfortable",
+        description: "Branching, review-ready commits, and disciplined project history.",
+      },
+      {
+        name: "Docker",
+        icon: "docker",
+        level: "learning",
+        description: "Portable lab environments and deployment-friendly packaging.",
+      },
     ],
   },
 ];
 
 export const SKILLS_COPY = {
-  heading: "Focused tooling for secure product work.",
+  heading: "A focused technical arsenal organized like a security operations stack.",
   levelLabels: {
     learning: "learning",
     comfortable: "comfortable",
   },
+  activePrefix: "Active cluster",
 };
 
 export const PROJECTS: Project[] = [
   {
     title: "Network Vulnerability Scanner",
+    codename: "RECON-01",
     status: "ACTIVE",
     severity: "HIGH",
     description:
-      "A standalone React cybersecurity interface for AI-powered network reconnaissance, animated scan logs, threat metrics, and risk report storytelling.",
+      "A cybersecurity interface for AI-assisted network reconnaissance, animated scan logs, threat metrics, and risk report storytelling.",
+    outcome:
+      "Designed to turn raw scan activity into a readable security narrative with prioritized findings and clear next steps.",
     stack: ["React", "TypeScript", "TailwindCSS", "Framer Motion"],
+    metrics: [
+      { label: "Mode", value: "Recon" },
+      { label: "Reports", value: "Risk scored" },
+      { label: "Surface", value: "Network" },
+    ],
+    telemetry: ["Port sweep", "Service probe", "Risk score", "Report export"],
     githubUrl: "https://github.com/LLawliet188/network-vulnerability-scanner-web",
     liveUrl: "https://github.com/LLawliet188/network-vulnerability-scanner-web",
   },
   {
     title: "Secure Password Vault",
+    codename: "VAULT-02",
     status: "DEMO",
     severity: "MED",
     description:
-      "An encrypted local password manager with AES-256 storage, master password hashing via Argon2, and a clean React frontend.",
+      "An encrypted local password manager concept with AES-256 storage, master password hashing via Argon2, and a clean React frontend.",
+    outcome:
+      "A practical exploration of local-first security UX, sensitive state handling, and authentication ergonomics.",
     stack: ["React", "TypeScript", "Python", "SQLite"],
+    metrics: [
+      { label: "Crypto", value: "AES-256" },
+      { label: "Hashing", value: "Argon2" },
+      { label: "Storage", value: "Local" },
+    ],
+    telemetry: ["Key derivation", "Encrypted record", "Local store", "Vault unlock"],
     githubUrl: "https://github.com/LLawliet188/secure-password-vault",
     liveUrl: "#contact",
   },
   {
     title: "Threat Intelligence Dashboard",
+    codename: "INTEL-03",
     status: "ACTIVE",
     severity: "HIGH",
     description:
-      "A real-time dashboard aggregating threat feeds, CVE alerts, and IOC data into a SOC-style interface with filtering and severity classification.",
+      "A SOC-style dashboard concept aggregating threat feeds, CVE alerts, and IOC data with filtering and severity classification.",
+    outcome:
+      "Built to practice security data storytelling: fast scanning, strong hierarchy, and clear incident prioritization.",
     stack: ["React", "TypeScript", "Python", "REST APIs"],
+    metrics: [
+      { label: "Feeds", value: "CVE / IOC" },
+      { label: "Mode", value: "Live triage" },
+      { label: "Output", value: "Severity" },
+    ],
+    telemetry: ["Feed ingest", "IOC match", "CVE watch", "Alert queue"],
     githubUrl: "https://github.com/LLawliet188/threat-intelligence-dashboard",
     liveUrl: "#contact",
   },
 ];
 
 export const PROJECTS_COPY = {
-  heading: "Security projects with practical outcomes.",
+  heading: "Field projects staged as cinematic security product stories.",
   githubLabel: "View source",
   externalLabel: "Open project",
-  severityPrefix: "SEVERITY:",
+  severityPrefix: "SEVERITY",
+  stackLabel: "Stack",
 };
 
 export const TERMINAL_COPY = {
-  heading: "Interactive profile shell.",
-  path: "~/manas/portfolio",
+  heading: "A live profile shell for quick recruiter-level context.",
+  path: "~/manas/command-center",
   prompt: "manas@portfolio:~$",
   hint: "Press / to focus terminal",
   placeholder: "Type a command",
-  mobileToggle: "Open terminal",
-  mobileClose: "Collapse terminal",
+  mobileToggle: "Open console",
+  mobileClose: "Collapse console",
   unknownCommand: "Command not found. Type help to see available commands.",
+  sidePanel: {
+    label: "Console Protocol",
+    status: "Interactive",
+    lines: ["help", "whoami", "skills", "projects", "contact", "clear"],
+  },
   commands: {
     help: [
       "Available commands:",
@@ -239,11 +379,13 @@ export const TERMINAL_COPY = {
 
 export const OPPORTUNITY = {
   text: "Currently seeking cybersecurity internships - Germany / Remote",
-  cta: "Get in Touch",
+  cta: "Start a conversation",
 };
 
 export const CONTACT_COPY = {
-  heading: "Let's build something secure.",
+  heading: "Open a secure channel.",
+  intro:
+    "For internships, collaborations, or security-focused frontend work, send the signal here.",
   response: "Usually responds within 24 hours",
   labels: {
     name: "Name",
@@ -266,10 +408,15 @@ export const CONTACT_COPY = {
     success: "Message Sent",
   },
   direct: "or email directly:",
+  channelCards: [
+    { label: "Email", value: "manasranjanrao188@gmail.com" },
+    { label: "LinkedIn", value: "linkedin.com/in/manas-ranjan-rao" },
+    { label: "Availability", value: "Internships / Germany / Remote" },
+  ],
 };
 
 export const FOOTER_COPY = {
-  built: "(c) 2026 Manas Ranjan Rao - Built with React & TypeScript",
+  built: "(c) 2026 Manas Ranjan Rao - Built with React, TypeScript & WebGL",
   backToTop: "Back to top",
   links: {
     github: "GitHub",
@@ -279,8 +426,13 @@ export const FOOTER_COPY = {
 };
 
 export const CERTIFICATIONS_COPY = {
-  heading: "Certifications",
+  heading: "Learning pipeline",
   eyebrow: "In progress",
   body:
-    "Documenting current cybersecurity learning milestones, labs, and certification preparation as the portfolio evolves.",
+    "Documenting cybersecurity labs, certification preparation, and practical notes as the portfolio evolves.",
+  milestones: [
+    { label: "Labs", value: "Network + web security" },
+    { label: "Notes", value: "Remediation-first writing" },
+    { label: "Next", value: "Internship-ready evidence" },
+  ],
 };

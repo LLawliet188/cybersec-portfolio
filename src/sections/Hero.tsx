@@ -1,197 +1,171 @@
-import { lazy, memo, Suspense, useEffect, useState } from "react";
-import { ArrowRight, ShieldCheck } from "lucide-react";
+import { lazy, memo, Suspense } from "react";
+import { ArrowRight, FileText } from "lucide-react";
 import { motion } from "framer-motion";
-import { HexGrid } from "../components/effects/HexGrid";
-import { LightRays } from "../components/effects/LightRays";
-import { GithubMark } from "../components/social/SocialIcons";
+import { GithubMark, LinkedinMark } from "../components/social/SocialIcons";
 import { HERO, SITE } from "../content/siteContent";
 import { useReveal } from "../hooks/useReveal";
 import { premiumEase, revealContainer, revealItem } from "../utils/animation";
 
-const GhostCursor = lazy(() =>
-  import("../components/effects/GhostCursor").then((module) => ({
-    default: module.GhostCursor,
+type HeroProps = {
+  onCue?: (sound: "hover" | "click") => void;
+};
+
+const ctaStyles = {
+  primary:
+    "phase-pill text-[#101106] hover:shadow-[0_0_34px_rgba(183,255,42,0.42)]",
+  secondary:
+    "border border-white/15 bg-white/[0.035] text-primary hover:border-violet/60 hover:bg-white/[0.075]",
+  ghost:
+    "border border-white/10 bg-transparent text-secondary hover:border-white/25 hover:text-primary",
+};
+
+const ctaIcons = {
+  GitHub: GithubMark,
+  LinkedIn: LinkedinMark,
+  Resume: FileText,
+  default: ArrowRight,
+};
+
+const phaseDots = ["01", "02", "03", "04", "05"];
+
+const CyberWorldScene = lazy(() =>
+  import("../components/effects/CyberWorldScene").then((module) => ({
+    default: module.CyberWorldScene,
   })),
 );
 
-const HeroComponent = () => {
-  const { ref, isInView } = useReveal();
-  const [showGhostCursor, setShowGhostCursor] = useState(false);
-
-  useEffect(() => {
-    const mediaQuery = window.matchMedia(
-      "(min-width: 768px) and (prefers-reduced-motion: no-preference)",
-    );
-    const updateGhostCursor = () => setShowGhostCursor(mediaQuery.matches);
-
-    updateGhostCursor();
-    mediaQuery.addEventListener("change", updateGhostCursor);
-
-    return () => mediaQuery.removeEventListener("change", updateGhostCursor);
-  }, []);
+const HeroComponent = ({ onCue }: HeroProps) => {
+  const { ref } = useReveal();
 
   return (
     <motion.section
-      animate={isInView ? "visible" : "hidden"}
-      className="relative isolate flex min-h-screen items-center overflow-hidden px-5 pb-20 pt-32 sm:px-8"
+      animate="visible"
+      className="relative isolate min-h-screen overflow-hidden px-5 pb-20 pt-28 sm:px-8"
       id="home"
       initial="hidden"
       ref={ref}
       variants={revealContainer}
     >
-      <LightRays
-        distortion={0.06}
-        followMouse={true}
-        lightSpread={1.1}
-        mouseInfluence={0.18}
-        noiseAmount={0.03}
-        rayLength={1.8}
-        raysColor="#00C8FF"
-        raysOrigin="top-center"
-        raysSpeed={1.2}
-      />
-      {showGhostCursor ? (
-        <Suspense fallback={null}>
-          <GhostCursor className="opacity-70" />
-        </Suspense>
-      ) : null}
-      <HexGrid className="opacity-[0.03]" />
-      <motion.div
-        animate={{ x: [0, 18, -8, 0], y: [0, -16, 10, 0] }}
-        className="absolute -left-28 top-32 h-80 w-80 rounded-full bg-accent/15 blur-[120px]"
-        transition={{ duration: 16, ease: "linear", repeat: Infinity }}
-      />
-      <motion.div
-        animate={{ x: [0, -12, 18, 0], y: [0, 18, -14, 0] }}
-        className="absolute -right-24 bottom-8 h-96 w-96 rounded-full bg-interactive/10 blur-[140px]"
-        transition={{ duration: 18, ease: "linear", repeat: Infinity }}
-      />
+      <Suspense fallback={null}>
+        <CyberWorldScene className="left-0 top-0 h-full w-full opacity-95" />
+      </Suspense>
+      <div className="cinematic-grain absolute inset-0 opacity-45" />
 
-      <div className="relative z-10 mx-auto grid w-full max-w-7xl items-center gap-12 lg:grid-cols-[1.05fr_0.95fr]">
-        <div className="max-w-4xl">
-          <motion.p
-            className="mb-6 font-mono text-xs uppercase tracking-[0.18em] text-accent"
-            variants={revealItem}
-          >
-            {HERO.credential}
-          </motion.p>
-          <motion.h1
-            aria-label={HERO.headingLines.join(" ")}
-            className="bg-heading-gradient bg-clip-text font-display text-4xl font-bold leading-[1.02] text-transparent sm:text-5xl md:text-6xl xl:text-7xl"
-            variants={revealItem}
-          >
-            {HERO.headingLines.map((line, index) => (
-              <span
-                className={index === 0 ? "block sm:whitespace-nowrap" : "block"}
-                key={line}
+      <div className="absolute left-1/2 top-8 z-10 hidden -translate-x-1/2 items-center gap-8 lg:flex">
+        {phaseDots.map((dot, index) => (
+          <motion.span
+            animate={{
+              opacity: index === 0 ? [0.8, 1, 0.8] : [0.22, 0.42, 0.22],
+              scale: index === 0 ? [1, 1.18, 1] : 1,
+            }}
+            className={`h-1.5 w-1.5 rounded-full ${
+              index === 0 ? "bg-success shadow-[0_0_16px_rgba(183,255,42,0.7)]" : "bg-white/55"
+            }`}
+            key={dot}
+            transition={{
+              delay: index * 0.2,
+              duration: 2.8,
+              ease: "easeInOut",
+              repeat: Infinity,
+            }}
+          />
+        ))}
+      </div>
+
+      <div className="relative z-10 mx-auto flex min-h-[calc(100vh-7rem)] max-w-7xl items-center">
+        <div className="grid w-full items-center gap-10 lg:grid-cols-[0.42fr_0.58fr]">
+          <motion.div className="max-w-xl" variants={revealItem}>
+            <span className="phase-pill inline-flex rounded-sm px-2 py-1 font-mono text-[10px] font-bold uppercase tracking-[0.16em]">
+              {HERO.eyebrow}
+            </span>
+            <motion.h1
+              className="mt-7 font-display text-5xl font-bold uppercase leading-[0.92] text-primary sm:text-6xl lg:text-7xl"
+              variants={revealItem}
+            >
+              {HERO.phaseTitle}
+            </motion.h1>
+            <motion.div
+              className="mt-8 flex items-center gap-4"
+              variants={revealItem}
+            >
+              <a
+                className="group inline-flex h-14 w-14 items-center justify-center border border-white/18 bg-white/[0.035] text-primary transition hover:border-success/70 hover:text-success"
+                href="#about"
+                onClick={() => onCue?.("click")}
+                onMouseEnter={() => onCue?.("hover")}
               >
-                {line}
-              </span>
-            ))}
-          </motion.h1>
-          <motion.p
-            className="mt-6 max-w-2xl font-body text-lg leading-8 text-secondary sm:text-xl"
-            variants={revealItem}
-          >
-            {HERO.subheading}
-          </motion.p>
-
-          <motion.div
-            className="mt-8 flex flex-col gap-4 sm:flex-row"
-            variants={revealItem}
-          >
-            <a
-              className="inline-flex items-center justify-center gap-2 rounded-md bg-cta-gradient px-6 py-3 font-body text-sm font-semibold text-[#061017] shadow-cyan transition hover:shadow-[0_0_36px_rgba(0,200,255,0.34)]"
-              href="#projects"
-            >
-              {HERO.ctas.primary}
-              <ArrowRight size={16} />
-            </a>
-            <a
-              className="inline-flex items-center justify-center gap-2 rounded-md border border-white/20 bg-white/[0.02] px-6 py-3 font-body text-sm font-semibold text-primary transition hover:border-interactive/70 hover:bg-white/[0.05]"
-              href={SITE.links.github}
-              rel="noreferrer"
-              target="_blank"
-            >
-              <GithubMark size={16} />
-              {HERO.ctas.secondary}
-            </a>
+                <ArrowRight size={18} />
+              </a>
+              <a
+                className="font-body text-sm font-bold text-white transition hover:text-success"
+                href="#about"
+                onClick={() => onCue?.("click")}
+                onMouseEnter={() => onCue?.("hover")}
+              >
+                Find Out More
+              </a>
+            </motion.div>
           </motion.div>
 
           <motion.div
-            className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2 font-mono text-xs uppercase tracking-[0.14em] text-muted"
-            variants={revealItem}
-          >
-            {HERO.stats.map((stat, index) => (
-              <span className="flex items-center gap-4" key={stat}>
-                {stat}
-                {index < HERO.stats.length - 1 ? (
-                  <span className="text-accent/50">/</span>
-                ) : null}
-              </span>
-            ))}
-          </motion.div>
+            animate={{ opacity: [0.72, 1, 0.72], y: [0, -8, 0] }}
+            className="pointer-events-none hidden min-h-[30rem] lg:block"
+            transition={{ duration: 6.5, ease: "easeInOut", repeat: Infinity }}
+          />
+        </div>
+      </div>
+
+      <motion.div
+        className="absolute bottom-8 left-5 right-5 z-10 mx-auto grid max-w-7xl gap-5 sm:left-8 sm:right-8 lg:grid-cols-[0.32fr_0.36fr_0.32fr]"
+        variants={revealItem}
+      >
+        <div className="hidden self-end font-body text-sm font-bold leading-5 text-white/80 lg:block">
+          Discover {SITE.name} - cybersecurity learning, secure interfaces, and practical tooling.
         </div>
 
-        <motion.div
-          className="relative hidden lg:block"
-          variants={revealItem}
-          whileHover={{ y: -6, transition: { duration: 0.45, ease: premiumEase } }}
-        >
-          <div className="absolute -inset-px rounded-lg bg-gradient-to-br from-accent/30 via-white/5 to-transparent opacity-70 blur-sm" />
-          <div className="relative overflow-hidden rounded-lg border border-white/10 bg-white/[0.035] p-5 shadow-2xl backdrop-blur-xl">
-            <div className="mb-6 flex items-center justify-between border-b border-white/10 pb-4">
-              <div>
-                <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-accent">
-                  {HERO.panel.label}
-                </p>
-                <p className="mt-1 font-body text-sm text-secondary">
-                  {HERO.panel.caption}
-                </p>
-              </div>
-              <ShieldCheck className="text-accent" size={22} />
-            </div>
-
-            <div className="grid grid-cols-[0.78fr_1fr] gap-5">
-              <div className="flex aspect-square items-center justify-center rounded-md border border-white/10 bg-base/60">
-                <div className="text-center">
-                  <p className="font-mono text-5xl font-semibold text-primary">
-                    {HERO.panel.score}
-                  </p>
-                  <div className="mx-auto mt-4 h-1 w-20 overflow-hidden rounded-full bg-white/10">
-                    <motion.div
-                      animate={{ x: ["-35%", "100%"] }}
-                      className="h-full w-12 bg-accent"
-                      transition={{
-                        duration: 2.8,
-                        ease: "linear",
-                        repeat: Infinity,
-                      }}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                {HERO.panel.rows.map((row) => (
-                  <div
-                    className="rounded-md border border-white/10 bg-white/[0.025] p-4"
-                    key={row.label}
-                  >
-                    <div className="mb-3 flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.16em]">
-                      <span className="text-secondary">{row.label}</span>
-                      <span className="text-accent">{row.value}</span>
-                    </div>
-                    <div className="h-1 rounded-full bg-white/10">
-                      <div className="h-full w-4/5 rounded-full bg-cta-gradient" />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+        <div className="flex flex-col items-center justify-center gap-4">
+          <div className="hidden font-mono text-[10px] uppercase tracking-[0.2em] text-white/70 lg:block">
+            Click & hold to listen
           </div>
-        </motion.div>
-      </div>
+          <div className="hidden h-12 w-12 items-center justify-center rounded-full border border-white/25 lg:flex">
+            <motion.div
+              animate={{ rotate: 360 }}
+              className="h-8 w-8 rounded-full border border-success/60 border-t-transparent"
+              transition={{ duration: 7, ease: "linear", repeat: Infinity }}
+            />
+          </div>
+          <a
+            className="font-mono text-[10px] uppercase tracking-[0.24em] text-white/80 transition hover:text-success"
+            href="#projects"
+          >
+            Scroll to discover
+          </a>
+        </div>
+
+        <div className="flex flex-wrap items-center justify-center gap-3 lg:justify-end">
+          {HERO.ctas.slice(1).map((cta) => {
+            const Icon = ctaIcons[cta.label as keyof typeof ctaIcons] ?? ctaIcons.default;
+            const isExternal = cta.href.startsWith("http");
+
+            return (
+              <a
+                className={`inline-flex min-w-28 items-center justify-center gap-2 rounded-sm px-4 py-3 font-body text-sm font-bold transition duration-300 ${
+                  ctaStyles[cta.variant as keyof typeof ctaStyles]
+                }`}
+                href={cta.href}
+                key={cta.label}
+                onClick={() => onCue?.("click")}
+                onMouseEnter={() => onCue?.("hover")}
+                rel={isExternal ? "noreferrer" : undefined}
+                target={isExternal ? "_blank" : undefined}
+              >
+                <Icon size={15} />
+                {cta.label}
+              </a>
+            );
+          })}
+        </div>
+      </motion.div>
     </motion.section>
   );
 };

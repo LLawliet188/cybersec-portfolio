@@ -1,5 +1,7 @@
-import { memo, useEffect } from "react";
-import { HexGrid } from "./components/effects/HexGrid";
+import { memo, useEffect, useState } from "react";
+import { AnimatePresence } from "framer-motion";
+import { AtmosphericBackdrop } from "./components/effects/AtmosphericBackdrop";
+import { IntroGate } from "./components/experience/IntroGate";
 import { ScrollProgress } from "./components/effects/ScrollProgress";
 import { Navbar } from "./components/layout/Navbar";
 import { About } from "./sections/About";
@@ -11,9 +13,15 @@ import { OpportunityStrip } from "./sections/OpportunityStrip";
 import { Projects } from "./sections/Projects";
 import { Skills } from "./sections/Skills";
 import { TerminalSection } from "./sections/TerminalSection";
+import { useSoundEffects } from "./hooks/useSoundEffects";
 
 const AppComponent = () => {
+  const [hasEntered, setHasEntered] = useState(false);
+  const { enableSound, playSound, soundEnabled, toggleSound } = useSoundEffects();
+
   useEffect(() => {
+    if (!hasEntered) return;
+
     let frameId = 0;
 
     const scrollToHash = () => {
@@ -32,27 +40,39 @@ const AppComponent = () => {
       window.cancelAnimationFrame(frameId);
       window.removeEventListener("hashchange", scrollToHash);
     };
-  }, []);
+  }, [hasEntered]);
+
+  const enterExperience = () => {
+    enableSound();
+    setHasEntered(true);
+    window.setTimeout(() => playSound("enter"), 40);
+  };
 
   return (
     <div className="min-h-screen bg-base text-primary">
-      <ScrollProgress />
-      <Navbar />
+      <AnimatePresence>
+        {!hasEntered ? <IntroGate onEnter={enterExperience} /> : null}
+      </AnimatePresence>
+      {hasEntered ? (
+        <>
+          <ScrollProgress />
+          <Navbar soundEnabled={soundEnabled} onToggleSound={toggleSound} />
 
-      <main className="relative isolate overflow-hidden">
-        <HexGrid className="fixed inset-0 -z-10 opacity-[0.03]" />
-        <div className="fixed left-1/2 top-1/3 -z-10 h-[34rem] w-[34rem] -translate-x-1/2 rounded-full bg-accent/[0.035] blur-[150px]" />
-        <Hero />
-        <About />
-        <Skills />
-        <Certifications />
-        <Projects />
-        <TerminalSection />
-        <OpportunityStrip />
-        <Contact />
-      </main>
+          <main className="relative isolate overflow-hidden">
+            <AtmosphericBackdrop />
+            <Hero onCue={playSound} />
+            <About />
+            <Projects />
+            <Skills />
+            <Certifications />
+            <TerminalSection />
+            <OpportunityStrip />
+            <Contact />
+          </main>
 
-      <Footer />
+          <Footer />
+        </>
+      ) : null}
     </div>
   );
 };

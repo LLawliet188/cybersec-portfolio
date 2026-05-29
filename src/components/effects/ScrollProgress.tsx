@@ -7,7 +7,7 @@ const ScrollProgressComponent = () => {
   return (
     <div
       aria-hidden="true"
-      className="fixed left-0 top-0 z-[70] h-0.5 bg-accent shadow-cyan-sm"
+      className="fixed left-0 top-0 z-[70] h-0.5 bg-cta-gradient shadow-cyan-sm"
       style={{ width: `${progress}%` }}
     />
   );
