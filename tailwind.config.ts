@@ -5,18 +5,18 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        base: "#05040A",
-        "base-soft": "#0D0717",
-        "base-panel": "#140B22",
-        accent: "#8B5CF6",
-        interactive: "#38BDF8",
-        violet: "#A855F7",
-        ember: "#FB7185",
-        aurora: "#22D3EE",
-        success: "#B7FF2A",
-        primary: "#F8F5FF",
-        secondary: "#B8A9CC",
-        muted: "#655875",
+        void: "#020107",
+        "base-soft": "#080512",
+        "base-panel": "#120A1C",
+        accent: "#A78BFA",
+        interactive: "#FF4FD8",
+        violet: "#7C3AED",
+        ember: "#FF6B9A",
+        aurora: "#6EE7F9",
+        success: "#DFFF6A",
+        primary: "#FAF7FF",
+        secondary: "#B8ABC8",
+        muted: "#6B5F78",
         glass: "rgba(255,255,255,0.03)",
       },
       fontFamily: {
@@ -28,19 +28,19 @@ const config: Config = {
         signal: "0.14em",
       },
       boxShadow: {
-        cyan: "0 0 34px rgba(168, 85, 247, 0.26)",
-        "cyan-sm": "0 0 18px rgba(56, 189, 248, 0.18)",
+        cyan: "0 0 34px rgba(255, 79, 216, 0.22)",
+        "cyan-sm": "0 0 18px rgba(110, 231, 249, 0.16)",
         "panel-depth":
-          "0 34px 100px rgba(2, 1, 8, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.08)",
-        "violet-soft": "0 0 44px rgba(168, 85, 247, 0.24)",
+          "0 34px 100px rgba(2, 1, 8, 0.76), inset 0 1px 0 rgba(255, 255, 255, 0.08)",
+        "violet-soft": "0 0 44px rgba(167, 139, 250, 0.2)",
       },
       backgroundImage: {
         "cta-gradient":
-          "linear-gradient(135deg, rgba(183,255,42,0.96), rgba(56,189,248,0.88))",
+          "linear-gradient(135deg, rgba(223,255,106,0.96), rgba(255,79,216,0.78))",
         "heading-gradient":
-          "linear-gradient(135deg, #FFFFFF 4%, #DDD6FE 28%, #A855F7 62%, #38BDF8 100%)",
+          "linear-gradient(135deg, #FFFFFF 4%, #E9D5FF 28%, #FF4FD8 62%, #6EE7F9 100%)",
         "panel-gradient":
-          "linear-gradient(145deg, rgba(255,255,255,0.085), rgba(255,255,255,0.018))",
+          "linear-gradient(145deg, rgba(255,255,255,0.08), rgba(255,255,255,0.016))",
       },
     },
   },

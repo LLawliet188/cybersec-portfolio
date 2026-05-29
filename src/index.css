@@ -6,7 +6,7 @@
 
 :root {
   color: #f0f4f8;
-  background: #060a0e;
+  background: #020107;
   font-family: "Inter", system-ui, sans-serif;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -16,7 +16,7 @@
 
 html {
   scroll-behavior: smooth;
-  background: #060a0e;
+  background: #020107;
 }
 
 body {
@@ -25,9 +25,9 @@ body {
   margin: 0;
   overflow-x: hidden;
   background:
-    radial-gradient(ellipse at 50% 12%, rgba(168, 85, 247, 0.24), transparent 38rem),
-    radial-gradient(ellipse at 74% 18%, rgba(56, 189, 248, 0.14), transparent 32rem),
-    linear-gradient(180deg, #05040a 0%, #140727 42%, #020207 100%);
+    radial-gradient(ellipse at 48% -10%, rgba(167, 139, 250, 0.2), transparent 40rem),
+    radial-gradient(ellipse at 80% 14%, rgba(255, 79, 216, 0.1), transparent 34rem),
+    linear-gradient(180deg, #020107 0%, #090414 46%, #010104 100%);
 }
 
 * {
@@ -35,8 +35,8 @@ body {
 }
 
 ::selection {
-  color: #061017;
-  background: #00c8ff;
+  color: #07040a;
+  background: #dfff6a;
 }
 
 a {
@@ -48,6 +48,11 @@ a,
 input,
 textarea {
   -webkit-tap-highlight-color: transparent;
+}
+
+.tactical-cursor-enabled,
+.tactical-cursor-enabled * {
+  cursor: none !important;
 }
 
 @layer components {
@@ -78,13 +83,13 @@ textarea {
     z-index: -1;
     border-radius: inherit;
     background:
-      linear-gradient(135deg, rgba(168, 85, 247, 0.54), rgba(56, 189, 248, 0.18), transparent 62%),
-      linear-gradient(315deg, rgba(251, 113, 133, 0.28), transparent 46%);
+      linear-gradient(135deg, rgba(167, 139, 250, 0.54), rgba(255, 79, 216, 0.18), transparent 62%),
+      linear-gradient(315deg, rgba(255, 107, 154, 0.28), transparent 46%);
     opacity: 0.64;
   }
 
 .signal-line {
-  background: linear-gradient(90deg, transparent, rgba(168, 85, 247, 0.74), rgba(56, 189, 248, 0.34), transparent);
+  background: linear-gradient(90deg, transparent, rgba(167, 139, 250, 0.74), rgba(255, 79, 216, 0.34), transparent);
 }
 }
 
@@ -116,9 +121,78 @@ textarea {
 }
 
 .phase-pill {
-  background: #b7ff2a;
-  box-shadow: 0 0 22px rgba(183, 255, 42, 0.34);
+  background: #dfff6a;
+  box-shadow: 0 0 22px rgba(223, 255, 106, 0.28);
   color: #101106;
+}
+
+.phase-chip {
+  background: linear-gradient(135deg, var(--node-alert), rgba(255, 255, 255, 0.74));
+  box-shadow: 0 0 28px color-mix(in srgb, var(--node-alert) 34%, transparent);
+  color: #08050c;
+}
+
+.mission-node {
+  isolation: isolate;
+}
+
+.mission-node::before {
+  position: absolute;
+  inset: 12% auto 12% 1.25rem;
+  width: 1px;
+  content: "";
+  background: linear-gradient(180deg, transparent, var(--node-secondary), transparent);
+  opacity: 0.24;
+}
+
+.intelligence-grid {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.14) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.14) 1px, transparent 1px),
+    radial-gradient(ellipse at center, rgba(255, 79, 216, 0.12), transparent 62%);
+  background-position: center;
+  background-size: 100% 52px, 52px 100%, 100% 100%;
+  mask-image: linear-gradient(180deg, transparent 0%, black 28%, black 74%, transparent 100%);
+}
+
+.hold-control::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  background: linear-gradient(110deg, transparent 0%, rgba(255, 255, 255, 0.16) 48%, transparent 62%);
+  transform: translateX(-120%);
+  transition: transform 900ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.hold-control:hover::after {
+  transform: translateX(120%);
+}
+
+.intel-plane {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.052), rgba(255, 255, 255, 0.012)),
+    radial-gradient(circle at 22% 10%, color-mix(in srgb, var(--node-secondary) 18%, transparent), transparent 18rem);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.32);
+  backdrop-filter: blur(18px);
+}
+
+.intel-plane::before,
+.intel-row::before {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  content: "";
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--node-alert) 18%, transparent), transparent);
+  opacity: 0.22;
+}
+
+.intel-row {
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(12px);
 }
 
 .terminal-cursor {
