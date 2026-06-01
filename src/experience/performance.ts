@@ -4,6 +4,8 @@ export type RenderQualitySettings = {
   antialias: boolean;
   dpr: [number, number];
   environmentPreset: boolean;
+  galaxyParticleScale: number;
+  microDetailScale: number;
   particleScale: number;
   ringSegments: number;
   sparkleActive: number;
@@ -16,32 +18,38 @@ export type RenderQualitySettings = {
 export const renderQualitySettings: Record<RenderQuality, RenderQualitySettings> = {
   high: {
     antialias: true,
-    dpr: [0.95, 1.25],
+    dpr: [0.9, 1.15],
     environmentPreset: true,
-    particleScale: 0.82,
-    ringSegments: 112,
+    galaxyParticleScale: 0.72,
+    microDetailScale: 0.72,
+    particleScale: 0.78,
+    ringSegments: 96,
     sparkleActive: 84,
     sparkleIdle: 24,
     starCount: 900,
     trailSegments: 128,
-    visibleNeighborRange: 1,
+    visibleNeighborRange: 0,
   },
   medium: {
     antialias: false,
     dpr: [0.75, 1],
     environmentPreset: true,
+    galaxyParticleScale: 0.48,
+    microDetailScale: 0.52,
     particleScale: 0.58,
     ringSegments: 88,
     sparkleActive: 54,
     sparkleIdle: 14,
     starCount: 560,
     trailSegments: 96,
-    visibleNeighborRange: 1,
+    visibleNeighborRange: 0,
   },
   low: {
     antialias: false,
     dpr: [0.62, 0.82],
     environmentPreset: false,
+    galaxyParticleScale: 0.24,
+    microDetailScale: 0.34,
     particleScale: 0.34,
     ringSegments: 64,
     sparkleActive: 28,

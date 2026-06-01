@@ -177,19 +177,70 @@ const createGalaxyGeometry = (
   const colorA = new Color(profile.nebula[0]);
   const colorB = new Color(profile.nebula[1]);
   const colorC = new Color(profile.nebula[2]);
+  const dust = new Color(profile.dust);
   const solar = new Color(profile.solar);
 
   for (let index = 0; index < count; index += 1) {
-    const arm = index % 4;
-    const radial = Math.pow(seeded(seed + index * 0.91), 1.65) * radius;
-    const sweep = radial * 0.72 + arm * Math.PI * 0.5 + seeded(seed + index * 1.33) * 0.72;
-    const scatter = (seeded(seed + index * 2.4) - 0.5) * (0.26 + radial * 0.025);
-    const x = Math.cos(sweep) * radial * 1.62 + scatter;
-    const y = (seeded(seed + index * 3.7) - 0.5) * depth * (0.16 + radial / (radius * 7.8));
-    const z = Math.sin(sweep) * radial * 0.72 - depth * 0.42 + scatter * 0.55;
+    const arm = index % 5;
+    const radial = (0.08 + Math.pow(seeded(seed + index * 0.91), 1.9) * 0.92) * radius;
+    const sweep =
+      radial * 0.58 +
+      arm * ((Math.PI * 2) / 5) +
+      seeded(seed + index * 1.33) * 0.48;
+    const lane = Math.sin(sweep * 2.1 + radial * 0.86);
+    const scatter = (seeded(seed + index * 2.4) - 0.5) * (0.28 + radial * 0.034);
+    const armNoise = (seeded(seed + index * 2.93) - 0.5) * radial * 0.1;
+    const x = Math.cos(sweep) * radial * 1.82 + scatter + armNoise;
+    const y =
+      (seeded(seed + index * 3.7) - 0.5) *
+        depth *
+        (0.045 + radial / (radius * 16)) +
+      lane * 0.04;
+    const z = Math.sin(sweep) * radial * 0.62 - depth * 0.42 + scatter * 0.5;
     const mix = seeded(seed + index * 4.2);
+    const coreGlow = Math.max(0, 1 - radial / (radius * 0.54));
 
-    objectColor.copy(mix > 0.86 ? solar : mix > 0.56 ? colorC : colorB).lerp(colorA, radial / radius * 0.32);
+    objectColor
+      .copy(mix > 0.9 ? solar : mix > 0.68 ? colorC : mix > 0.36 ? colorB : dust)
+      .lerp(colorA, radial / radius * 0.26)
+      .lerp(solar, coreGlow * 0.22);
+    positions.push(x, y, z);
+    colors.push(objectColor.r, objectColor.g, objectColor.b);
+  }
+
+  geometry.setAttribute("position", new Float32BufferAttribute(positions, 3));
+  geometry.setAttribute("color", new Float32BufferAttribute(colors, 3));
+  return geometry;
+};
+
+const createStellarClusterGeometry = (
+  count: number,
+  spread: [number, number, number],
+  seed: number,
+  profile: SceneWorldProfile,
+) => {
+  const geometry = new BufferGeometry();
+  const positions: number[] = [];
+  const colors: number[] = [];
+  const coolWhite = new Color("#F8FAFC");
+  const blueWhite = new Color(profile.rim);
+  const warmStar = new Color(profile.solar);
+  const nebula = new Color(profile.nebula[1]);
+
+  for (let index = 0; index < count; index += 1) {
+    const armBias = seeded(seed + index * 0.61);
+    const lane = (armBias - 0.5) * 1.8;
+    const x = (seeded(seed + index * 1.11) - 0.5) * spread[0] + lane * spread[0] * 0.22;
+    const y =
+      (seeded(seed + index * 1.91) - 0.5) *
+      spread[1] *
+      (0.18 + Math.abs(lane) * 0.18);
+    const z = (seeded(seed + index * 2.71) - 0.5) * spread[2] - spread[2] * 0.42;
+    const colorSeed = seeded(seed + index * 3.31);
+
+    objectColor
+      .copy(colorSeed > 0.94 ? warmStar : colorSeed > 0.62 ? coolWhite : blueWhite)
+      .lerp(nebula, seeded(seed + index * 4.7) * 0.24);
     positions.push(x, y, z);
     colors.push(objectColor.r, objectColor.g, objectColor.b);
   }
@@ -326,12 +377,13 @@ const EnergyCloud = ({
                 n += noise(uv * 7.4 + vec2(-uTime * 0.026, uTime * 0.04)) * 0.48;
                 n += noise(uv * 14.0 + uTime * 0.018) * 0.2;
                 float spiral = sin(atan(p.y, p.x) * 3.0 + length(p) * 7.2 - uTime * 0.22);
+                float band = 1.0 - smoothstep(0.08, 0.84, abs(p.y + sin(p.x * 2.0 + uTime * 0.08) * 0.16));
                 float haze = smoothstep(0.2, 1.2, n);
                 float vignette = 1.0 - smoothstep(0.36, 1.28, length(p));
                 float ray = pow(max(0.0, 1.0 - abs(p.x * 0.58 + sin(uv.y * 8.0 + uTime * 0.34) * 0.22)), 3.0);
                 float galactic = smoothstep(-0.35, 0.78, spiral + n * 0.7);
-                float alpha = (haze * 0.2 + ray * 0.1 + galactic * 0.12) * vignette * (uOpacity + uIntensity * 0.22);
-                vec3 color = mix(mix(uColorA, uColorB, clamp(n, 0.0, 1.0)), uColorC, galactic * 0.42);
+                float alpha = (haze * 0.16 + ray * 0.08 + galactic * 0.1 + band * (0.08 + n * 0.1)) * vignette * (uOpacity + uIntensity * 0.22);
+                vec3 color = mix(mix(uColorA, uColorB, clamp(n, 0.0, 1.0)), uColorC, max(galactic * 0.38, band * 0.28));
                 gl_FragColor = vec4(color, alpha);
               }
             `}
@@ -344,6 +396,135 @@ const EnergyCloud = ({
                 gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
               }
             `}
+      />
+    </mesh>
+  );
+};
+
+const StellarClusterField = ({ quality }: { quality: RenderQuality }) => {
+  const pointsRef = useRef<Points>(null);
+  const { activationProgressRef, activeNode, intensityRef, progressRef, reducedMotion, transitionProgressRef } =
+    useEnvironment();
+  const profile = sceneWorldProfiles[activeNode];
+  const settings = renderQualitySettings[quality];
+  const count = Math.round((quality === "high" ? 940 : quality === "medium" ? 620 : 280) * settings.galaxyParticleScale);
+  const geometry = useMemo(
+    () => createStellarClusterGeometry(count, [28, 8, 18], getNodeIndex(activeNode) * 71 + 511, profile),
+    [activeNode, count, profile],
+  );
+
+  useFrame(({ clock }) => {
+    if (!pointsRef.current) return;
+    const elapsed = clock.getElapsedTime();
+    pointsRef.current.rotation.z = -0.24 + progressRef.current * 0.24 + Math.sin(elapsed * 0.024) * 0.025;
+    pointsRef.current.rotation.y = -0.12 + transitionProgressRef.current * 0.08;
+    pointsRef.current.position.z = -8.4 - progressRef.current * 2.2 - activationProgressRef.current * 0.8;
+    pointsRef.current.position.x = Math.sin(elapsed * 0.025 + getNodeIndex(activeNode)) * 0.26;
+    pointsRef.current.position.y = 0.16 + intensityRef.current * 0.12;
+  });
+
+  return (
+    <points ref={pointsRef} geometry={geometry} rotation={[0.62, -0.16, -0.24]}>
+      <pointsMaterial
+        blending={AdditiveBlending}
+        depthWrite={false}
+        opacity={reducedMotion ? 0.28 : 0.54}
+        size={quality === "high" ? 0.02 : quality === "medium" ? 0.026 : 0.038}
+        sizeAttenuation
+        transparent
+        vertexColors
+      />
+    </points>
+  );
+};
+
+const GalacticDustVeil = ({ quality }: { quality: RenderQuality }) => {
+  const meshRef = useRef<Mesh>(null);
+  const materialRef = useRef<ShaderMaterial>(null);
+  const { activationProgressRef, activeNode, intensityRef, reducedMotion, sceneProgressRef, transitionProgressRef } =
+    useEnvironment();
+  const profile = sceneWorldProfiles[activeNode];
+  const uniforms = useMemo(
+    () => ({
+      uColorA: { value: new Color(profile.shadow) },
+      uColorB: { value: new Color(profile.nebula[0]) },
+      uIntensity: { value: 0 },
+      uOpacity: { value: quality === "low" ? 0.11 : quality === "medium" ? 0.15 : 0.18 },
+      uTime: { value: 0 },
+    }),
+    [profile.nebula, profile.shadow, quality],
+  );
+
+  useFrame(({ clock }) => {
+    const elapsed = clock.getElapsedTime();
+    if (meshRef.current) {
+      meshRef.current.position.y = 0.08 + sceneProgressRef.current * 0.06 + Math.sin(elapsed * 0.035) * 0.03;
+      meshRef.current.rotation.z = -0.18 + transitionProgressRef.current * 0.045;
+    }
+    if (materialRef.current) {
+      materialRef.current.uniforms.uTime.value = reducedMotion ? 0 : elapsed * 0.22;
+      materialRef.current.uniforms.uIntensity.value =
+        intensityRef.current * 0.42 + transitionProgressRef.current * 0.28 + activationProgressRef.current * 0.42;
+    }
+  });
+
+  return (
+    <mesh
+      ref={meshRef}
+      position={[0.1, 0.08, -5.1]}
+      rotation={[0, 0, -0.18]}
+      scale={[15.4, 7.7, 1]}
+    >
+      <planeGeometry args={[1, 1, 1, 1]} />
+      <shaderMaterial
+        ref={materialRef}
+        depthTest={false}
+        depthWrite={false}
+        fragmentShader={`
+          varying vec2 vUv;
+          uniform vec3 uColorA;
+          uniform vec3 uColorB;
+          uniform float uIntensity;
+          uniform float uOpacity;
+          uniform float uTime;
+
+          float hash(vec2 p) {
+            return fract(sin(dot(p, vec2(41.7, 289.1))) * 43758.5453123);
+          }
+
+          float noise(vec2 p) {
+            vec2 i = floor(p);
+            vec2 f = fract(p);
+            vec2 u = f * f * (3.0 - 2.0 * f);
+            return mix(
+              mix(hash(i), hash(i + vec2(1.0, 0.0)), u.x),
+              mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x),
+              u.y
+            );
+          }
+
+          void main() {
+            vec2 p = (vUv - 0.5) * 2.0;
+            float warp = sin(p.x * 2.1 + uTime * 0.12) * 0.16;
+            float band = 1.0 - smoothstep(0.08, 0.78, abs(p.y + warp));
+            float large = noise(vUv * 4.4 + vec2(uTime * 0.03, -uTime * 0.02));
+            float fine = noise(vUv * 13.0 + vec2(-uTime * 0.04, uTime * 0.025));
+            float lane = smoothstep(0.46, 0.84, large * 0.72 + fine * 0.28) * band;
+            float fracture = smoothstep(0.62, 0.9, fine) * band * 0.52;
+            float alpha = (lane * 0.72 + fracture * 0.36) * (uOpacity + uIntensity * 0.05);
+            vec3 color = mix(uColorA, uColorB, large * 0.18);
+            gl_FragColor = vec4(color, alpha);
+          }
+        `}
+        transparent
+        uniforms={uniforms}
+        vertexShader={`
+          varying vec2 vUv;
+          void main() {
+            vUv = uv;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+          }
+        `}
       />
     </mesh>
   );
@@ -511,7 +692,7 @@ const CosmicLightCorridor = ({ quality }: { quality: RenderQuality }) => {
     useEnvironment();
   const profile = sceneWorldProfiles[activeNode];
   const node = missionNodes.find((item) => item.id === activeNode) ?? missionNodes[0];
-  const bands = quality === "low" ? [0, 1, 2] : [0, 1, 2, 3, 4];
+  const bands = quality === "low" ? [0, 1] : [0, 1, 2];
 
   useFrame(({ clock }) => {
     if (!groupRef.current) return;
@@ -560,7 +741,7 @@ const EnergyTrails = ({ quality }: { quality: RenderQuality }) => {
   } = useEnvironment();
   const node = missionNodes.find((item) => item.id === activeNode) ?? missionNodes[0];
   const settings = renderQualitySettings[quality];
-  const rings = quality === "low" ? [0, 1, 2, 3] : [0, 1, 2, 3, 4, 5];
+  const rings = quality === "low" ? [0, 1, 2] : [0, 1, 2, 3];
 
   useFrame(({ clock }) => {
     if (!groupRef.current) return;
@@ -607,7 +788,7 @@ const VolumetricLightRays = ({ quality }: { quality: RenderQuality }) => {
   const groupRef = useRef<Group>(null);
   const { activationProgress, activeNode, intensity, mode, reducedMotion, transitionProgress } = useEnvironment();
   const node = missionNodes.find((item) => item.id === activeNode) ?? missionNodes[0];
-  const rayCount = quality === "low" ? 2 : 4;
+  const rayCount = quality === "low" ? 2 : 3;
 
   useFrame(({ clock }) => {
     if (!groupRef.current) return;
@@ -656,7 +837,7 @@ const HolographicScanVolume = ({ quality }: { quality: RenderQuality }) => {
 
   return (
     <group ref={groupRef} position={[0.62, -0.35, -2.2]} rotation={[1.12, 0, 0]}>
-      {[0, 1, 2].map((plane) => (
+      {[0, 1].map((plane) => (
         <mesh key={plane} position={[0, 0, plane * 0.34 - 0.28]} scale={[5.4 + plane * 0.9, 5.4 + plane * 0.9, 1]}>
           <ringGeometry args={[0.78 + plane * 0.22, 1.02 + plane * 0.24, settings.ringSegments]} />
           <meshBasicMaterial
@@ -691,7 +872,7 @@ const EnergyHorizon = ({ quality }: { quality: RenderQuality }) => {
 
   return (
     <group ref={groupRef} rotation={[1.18, 0, sceneProgress * 0.12]} position={[0.75, -1.55, -3.4]}>
-      {[0, 1, 2, 3].map((layer) => (
+      {[0, 1, 2].map((layer) => (
         <mesh key={layer} position={[0, layer * -0.06, layer * -0.18]} scale={[5.2 + layer * 0.8, 1.1 + layer * 0.18, 1]}>
           <ringGeometry args={[0.46 + layer * 0.15, 0.5 + layer * 0.18, settings.ringSegments]} />
           <meshBasicMaterial
@@ -714,13 +895,13 @@ const DigitalLandscape = ({ quality }: { quality: RenderQuality }) => {
     useEnvironment();
   const node = missionNodes.find((item) => item.id === activeNode) ?? missionNodes[0];
   const profile = sceneWorldProfiles[activeNode];
-  const pieceCount = quality === "high" ? 18 : quality === "medium" ? 12 : 8;
+  const pieceCount = quality === "high" ? 8 : quality === "medium" ? 6 : 3;
   const landscape = useMemo(
     () =>
       Array.from({ length: pieceCount }, (_, index) => ({
         height: 0.45 + seeded(index + 50) * 1.35,
         position: [
-          -5.8 + index * 0.68,
+          -5.4 + index * 1.32,
           -2.05 + seeded(index + 80) * 0.18,
           -4.2 - seeded(index + 110) * 1.5,
         ] as [number, number, number],
@@ -769,13 +950,13 @@ const ArchitecturalForms = ({ quality }: { quality: RenderQuality }) => {
     useEnvironment();
   const node = missionNodes.find((item) => item.id === activeNode) ?? missionNodes[0];
   const profile = sceneWorldProfiles[activeNode];
-  const columnCount = quality === "high" ? 9 : quality === "medium" ? 7 : 4;
+  const columnCount = quality === "high" ? 5 : quality === "medium" ? 4 : 2;
   const columns = useMemo(
     () =>
       Array.from({ length: columnCount }, (_, index) => ({
         height: 1.8 + seeded(index + 230) * 2.4,
         position: [
-          (index - 4) * 1.55,
+          (index - 2) * 2.15,
           -0.45 + seeded(index + 260) * 0.42,
           -5.2 - seeded(index + 290) * 1.9,
         ] as [number, number, number],
@@ -840,6 +1021,7 @@ const CinematicEnvironment = ({ quality }: { quality: RenderQuality }) => {
   return (
     <group>
       <GalacticStarRiver quality={quality} />
+      <StellarClusterField quality={quality} />
       <EnergyCloud
         colorA={profile.nebula[0]}
         colorB={profile.nebula[1]}
@@ -850,6 +1032,7 @@ const CinematicEnvironment = ({ quality }: { quality: RenderQuality }) => {
         scale={[19, 11, 1]}
         speed={0.86}
       />
+      <GalacticDustVeil quality={quality} />
       <EnergyCloud
         colorA="#020107"
         colorB={profile.solar}
@@ -861,6 +1044,8 @@ const CinematicEnvironment = ({ quality }: { quality: RenderQuality }) => {
         speed={0.68}
       />
       <PlanetarySilhouette quality={quality} />
+      <DigitalLandscape quality={quality} />
+      <ArchitecturalForms quality={quality} />
       <NeuralParticleLayer
         count={Math.round((isMobile ? 320 : 1080) * particleScale)}
         depth={24}
@@ -909,7 +1094,7 @@ const EnergyRings = ({
   const groupRef = useRef<Group>(null);
   const { intensity, reducedMotion } = useEnvironment();
   const settings = renderQualitySettings[quality];
-  const rings = quality === "low" ? [0, 1, 2] : [0, 1, 2, 3, 4];
+  const rings = quality === "low" ? [0, 1] : [0, 1, 2];
 
   useFrame(({ clock }) => {
     if (!groupRef.current) return;
@@ -1010,11 +1195,98 @@ const ChargeHalo = ({
   );
 };
 
+const EngineeredArtifactDetail = ({
+  activationProgress,
+  active,
+  node,
+  quality,
+  revealed,
+}: ArtifactRenderProps) => {
+  const groupRef = useRef<Group>(null);
+  const settings = renderQualitySettings[quality];
+  const detailCount = Math.round((quality === "high" ? 7 : quality === "medium" ? 5 : 3) * settings.microDetailScale);
+  const details = useMemo(
+    () =>
+      Array.from({ length: Math.max(4, detailCount) }, (_, index) => {
+        const angle = (index / Math.max(4, detailCount)) * Math.PI * 2;
+        const radius = 0.86 + seeded(index + 510) * 0.34;
+        return {
+          angle,
+          position: [
+            Math.cos(angle) * radius,
+            (seeded(index + 550) - 0.5) * 1.06,
+            Math.sin(angle) * radius,
+          ] as [number, number, number],
+          scale: 0.034 + seeded(index + 590) * 0.04,
+        };
+      }),
+    [detailCount],
+  );
+
+  useFrame(({ clock }) => {
+    if (!groupRef.current) return;
+    const elapsed = clock.getElapsedTime();
+    groupRef.current.rotation.y = elapsed * (active ? 0.18 : 0.07) + activationProgress * 0.24;
+    groupRef.current.rotation.x = Math.sin(elapsed * 0.2) * 0.08;
+  });
+
+  if (!active && !revealed) return null;
+
+  return (
+    <group ref={groupRef}>
+      {[0, 1].map((layer) => (
+        <mesh
+          key={`engrave-${layer}`}
+          rotation={[Math.PI / 2 + layer * 0.18, layer * 0.28, layer * 0.44]}
+          scale={[1 + layer * 0.08 + activationProgress * 0.04, 1 + layer * 0.08, 1]}
+        >
+          <torusGeometry args={[0.72 + layer * 0.17, 0.0025 + layer * 0.001, 6, settings.ringSegments]} />
+          <meshBasicMaterial
+            blending={AdditiveBlending}
+            color={layer === 1 ? node.ambient.alert : node.ambient.secondary}
+            depthWrite={false}
+            opacity={0.18 + activationProgress * 0.16 - layer * 0.025}
+            transparent
+          />
+        </mesh>
+      ))}
+      {details.map((detail, index) => (
+        <group key={`micro-${index}`} position={detail.position} rotation={[detail.angle * 0.2, detail.angle, 0]}>
+          <mesh scale={[detail.scale, detail.scale * (quality === "high" ? 2.8 : 2.1), detail.scale * 0.62]}>
+            <boxGeometry args={[1, 1, 1]} />
+            <meshStandardMaterial
+              color={node.ambient.secondary}
+              emissive={index % 3 === 0 ? node.ambient.alert : node.ambient.secondary}
+              emissiveIntensity={0.38 + activationProgress * 0.5}
+              metalness={0.74}
+              opacity={0.34 + activationProgress * 0.12}
+              roughness={0.22}
+              transparent
+            />
+          </mesh>
+          {index % 2 === 0 ? (
+            <mesh position={[0, detail.scale * 2.3, 0]} scale={detail.scale * 0.72}>
+              <sphereGeometry args={[1, quality === "high" ? 10 : 8, quality === "high" ? 10 : 8]} />
+              <meshBasicMaterial
+                blending={AdditiveBlending}
+                color={node.ambient.alert}
+                depthWrite={false}
+                opacity={0.28 + activationProgress * 0.24}
+                transparent
+              />
+            </mesh>
+          ) : null}
+        </group>
+      ))}
+    </group>
+  );
+};
+
 const ShardConstellation = ({ activationProgress, active, node, revealed }: ArtifactRenderProps) => {
   const groupRef = useRef<Group>(null);
   const shards = useMemo(
     () =>
-      Array.from({ length: 12 }, (_, index) => ({
+      Array.from({ length: 8 }, (_, index) => ({
         position: [
           Math.cos(index * 1.7) * (1.2 + seeded(index + 5) * 0.52),
           Math.sin(index * 0.9) * 0.92,
@@ -1099,7 +1371,7 @@ const InternalLattice = ({ active, node, quality, revealed }: ArtifactRenderProp
           transparent
         />
       </mesh>
-      {[0, 1, 2].map((ring) => (
+      {[0, 1].map((ring) => (
         <mesh key={ring} rotation={[ring * 0.7, Math.PI / 2 + ring * 0.42, ring * 0.2]}>
           <torusGeometry args={[0.58 + ring * 0.12, 0.004, 8, settings.ringSegments]} />
           <meshBasicMaterial
@@ -1167,7 +1439,7 @@ const EnergyEgg = ({ activationProgress, active, node, quality, revealed }: Arti
 
 const ScannerLattice = ({ activationProgress, active, node, quality, revealed }: ArtifactRenderProps) => {
   const settings = renderQualitySettings[quality];
-  const helixCount = quality === "low" ? 10 : quality === "medium" ? 14 : 18;
+  const helixCount = quality === "low" ? 5 : quality === "medium" ? 7 : 9;
   const helix = useMemo(
     () =>
       Array.from({ length: helixCount }, (_, index) => {
@@ -1226,7 +1498,7 @@ const ScannerLattice = ({ activationProgress, active, node, quality, revealed }:
             <sphereGeometry args={[1, quality === "low" ? 8 : 10, quality === "low" ? 8 : 10]} />
             <meshBasicMaterial color={node.ambient.alert} />
           </mesh>
-          {index % 2 === 0 ? (
+          {index % 3 === 0 ? (
             <mesh position={[0, pair.left[1], 0]} rotation={[Math.PI / 2, 0, index * 0.62]} scale={[0.014, 0.014, 0.34]}>
               <boxGeometry args={[1, 1, 1]} />
               <meshBasicMaterial
@@ -1406,6 +1678,7 @@ const SignatureArtifact = (props: ArtifactRenderProps) => {
       <InternalLattice {...props} />
       <EnergyRings active={hovered || revealed} color={node.ambient.alert} quality={quality} />
       <ChargeHalo {...props} />
+      <EngineeredArtifactDetail {...props} />
       <ShardConstellation {...props} />
       <Sparkles
         color={node.ambient.alert}

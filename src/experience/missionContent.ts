@@ -12,7 +12,7 @@ export const missionNodes: MissionNode[] = [
     label: "Boot Sequence",
     title: "Cyber Intelligence Operating System",
     dek: "Enter an active defense environment where portfolio data behaves like classified mission intelligence.",
-    artifactName: "Encrypted Origin Seed",
+    artifactName: "Encrypted Neural Genesis Core",
     artifactMeaning:
       "A sealed AI consciousness seed that introduces the portfolio as a classified intelligence system.",
     worldName: "Blue neural galaxy",
@@ -39,7 +39,7 @@ export const missionNodes: MissionNode[] = [
     label: "Identity Scan",
     title: "Reconstructing Operator Profile",
     dek: "The system scans academic identity, location, interests, and current cybersecurity trajectory.",
-    artifactName: "Cyber DNA Core",
+    artifactName: "Operator Identity Genome Core",
     artifactMeaning:
       "A biometric lattice that represents academic identity, location, and the early cybersecurity path.",
     worldName: "Cold identity nebula",
@@ -66,7 +66,7 @@ export const missionNodes: MissionNode[] = [
     label: "Arsenal Database",
     title: "Mapping Technical Capabilities",
     dek: "Skills are organized as live operating layers: interface, data, security tooling, and delivery systems.",
-    artifactName: "Toolchain Reactor",
+    artifactName: "Adaptive Cyber Arsenal Construct",
     artifactMeaning:
       "A modular tactical matrix where frontend, automation, Linux, and security tools lock into one capability engine.",
     worldName: "Violet orbital arsenal",
@@ -93,7 +93,7 @@ export const missionNodes: MissionNode[] = [
     label: "Operations Archive",
     title: "Reviewing Active Field Work",
     dek: "Projects appear as operations: recon interfaces, vault concepts, and threat intelligence dashboards.",
-    artifactName: "Mission Archive Vault",
+    artifactName: "Classified Operations Archive Engine",
     artifactMeaning:
       "A sealed operations prism built to represent project work as classified field intelligence.",
     worldName: "Crimson stellar archive",
@@ -119,7 +119,7 @@ export const missionNodes: MissionNode[] = [
     label: "Classified Intelligence File",
     title: "Compiling Recruiter Briefing",
     dek: "The portfolio compresses into a concise intelligence file: learning evidence, work mode, and contact readiness.",
-    artifactName: "Recruiter Data Monolith",
+    artifactName: "Recruiter Intelligence Monolith",
     artifactMeaning:
       "A compact intelligence file that condenses internship readiness, evidence, and operator signal.",
     worldName: "Holographic cosmic dossier",
@@ -146,7 +146,7 @@ export const missionNodes: MissionNode[] = [
     label: "Secure Transmission Channel",
     title: "Open Encrypted Contact Link",
     dek: "The final state opens a secure line for internships, collaborations, or cybersecurity-focused frontend work.",
-    artifactName: "Quantum Relay Beacon",
+    artifactName: "Quantum Signal Beacon",
     artifactMeaning:
       "A secure signal tower that turns the environment into a verified communication gateway.",
     worldName: "Cyan signal galaxy",
