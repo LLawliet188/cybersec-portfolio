@@ -35,7 +35,7 @@ const IntelligenceAtmosphereComponent = () => {
     >
       <motion.div
         animate={{
-          background: `linear-gradient(180deg, #020107 0%, ${node.ambient.primary}33 36%, #070311 70%, #010104 100%)`,
+          background: `radial-gradient(ellipse at 50% 18%, ${node.ambient.secondary}24, transparent 34rem), radial-gradient(ellipse at 78% 42%, ${node.ambient.alert}18, transparent 30rem), linear-gradient(180deg, ${node.ambient.primary} 0%, #070311 54%, #010104 100%)`,
         }}
         className="absolute inset-0"
         transition={{ duration: 1.2, ease: premiumEase }}
@@ -44,12 +44,12 @@ const IntelligenceAtmosphereComponent = () => {
       <motion.div
         animate={{
           opacity: isAlert ? 0.46 + transitionProgress * 0.12 + activationProgress * 0.12 : 0.3 + intensity * 0.16 + transitionProgress * 0.1 + activationProgress * 0.1,
-          scale: 1 + progress * 0.08 + intensity * 0.05 + transitionProgress * 0.04 + activationProgress * 0.06,
-          x: focusedNode ? 18 : (sceneProgress - 0.5) * 34,
+          scale: 1.08 + progress * 0.12 + intensity * 0.05 + transitionProgress * 0.06 + activationProgress * 0.08,
+          x: focusedNode ? 18 : (sceneProgress - 0.5) * 46,
         }}
-        className="absolute left-1/2 top-[-18rem] h-[52rem] w-[82rem] -translate-x-1/2 rounded-[50%] blur-[86px]"
+        className="absolute left-1/2 top-[-18rem] h-[54rem] w-[90rem] -translate-x-1/2 rounded-[50%] blur-[92px]"
         style={{
-          background: `radial-gradient(ellipse at center, ${node.ambient.secondary}66, ${node.ambient.primary}22 42%, transparent 72%)`,
+          background: `radial-gradient(ellipse at center, ${node.ambient.secondary}78, ${node.ambient.alert}1f 34%, ${node.ambient.primary}1d 52%, transparent 76%)`,
         }}
         transition={{ duration: 1.6, ease: premiumEase }}
       />
@@ -57,11 +57,11 @@ const IntelligenceAtmosphereComponent = () => {
       <motion.div
         animate={{
           opacity: 0.36 + intensity * 0.2 + transitionProgress * 0.18 + activationProgress * 0.14,
-          rotateX: 64 - intensity * 6 - transitionProgress * 8,
-          scale: 1 + progress * 0.1 + transitionProgress * 0.07,
-          y: progress * -70 - transitionProgress * 30 - activationProgress * 22,
+          rotateX: 58 - intensity * 6 - transitionProgress * 10,
+          scale: 1.06 + progress * 0.14 + transitionProgress * 0.08,
+          y: progress * -92 - transitionProgress * 36 - activationProgress * 26,
         }}
-        className="absolute bottom-[-17rem] left-1/2 h-[42rem] w-[95rem] -translate-x-1/2 rounded-[50%] border border-white/10 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.08),transparent_58%)]"
+        className="absolute bottom-[-17rem] left-1/2 h-[42rem] w-[100rem] -translate-x-1/2 rounded-[50%] border border-white/10 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.1),transparent_58%)]"
         transition={{ duration: 1.1, ease: premiumEase }}
       />
 

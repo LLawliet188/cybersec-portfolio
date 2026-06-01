@@ -15,15 +15,15 @@ export const missionNodes: MissionNode[] = [
     artifactName: "Encrypted Origin Seed",
     artifactMeaning:
       "A sealed AI consciousness seed that introduces the portfolio as a classified intelligence system.",
-    worldName: "Indigo intelligence chamber",
+    worldName: "Blue neural galaxy",
     interactionHint: "Hold the origin seed, or use find out more, to initialize the archive.",
     narration:
       "Threat mapping complete. Identity reconstruction is ready. Welcome to the intelligence archive.",
     narrationSrc: `${import.meta.env.BASE_URL}audio/narration/boot.mp3`,
     ambient: {
-      primary: "#101A3A",
+      primary: "#08112E",
       secondary: "#38BDF8",
-      alert: "#CBD5E1",
+      alert: "#FDE68A",
     },
     artifact: "core",
     signal: ["Neural archive waking", "Telemetry silent", "Defense layer idle"],
@@ -42,15 +42,15 @@ export const missionNodes: MissionNode[] = [
     artifactName: "Cyber DNA Core",
     artifactMeaning:
       "A biometric lattice that represents academic identity, location, and the early cybersecurity path.",
-    worldName: "Cold blue identity reactor",
+    worldName: "Cold identity nebula",
     interactionHint: "Hold the identity core, or use find out more, to reconstruct the operator profile.",
     narration:
       "Identity reconstruction initiated. Manas Ranjan Rao is pursuing computer science in Germany, with a growing focus on security operations and secure systems.",
     narrationSrc: `${import.meta.env.BASE_URL}audio/narration/identity.mp3`,
     ambient: {
-      primary: "#111C3D",
+      primary: "#041224",
       secondary: "#00C8FF",
-      alert: "#E2E8F0",
+      alert: "#E0F2FE",
     },
     artifact: "scanner",
     signal: ["BSc Computer Science", "IUBH Bad Honnef", "Germany / Remote"],
@@ -69,15 +69,15 @@ export const missionNodes: MissionNode[] = [
     artifactName: "Toolchain Reactor",
     artifactMeaning:
       "A modular tactical matrix where frontend, automation, Linux, and security tools lock into one capability engine.",
-    worldName: "Violet tactical matrix",
+    worldName: "Violet orbital arsenal",
     interactionHint: "Hold the toolchain reactor, or use find out more, to decrypt the arsenal database.",
     narration:
       "The arsenal database is opening. Interface engineering, Python automation, Linux workflows, and reconnaissance tooling are now indexed.",
     narrationSrc: `${import.meta.env.BASE_URL}audio/narration/arsenal.mp3`,
     ambient: {
-      primary: "#261047",
-      secondary: "#8B5CF6",
-      alert: "#22D3EE",
+      primary: "#19072F",
+      secondary: "#A855F7",
+      alert: "#FBBF24",
     },
     artifact: "construct",
     signal: skillSignal,
@@ -96,7 +96,7 @@ export const missionNodes: MissionNode[] = [
     artifactName: "Mission Archive Vault",
     artifactMeaning:
       "A sealed operations prism built to represent project work as classified field intelligence.",
-    worldName: "Crimson operations vault",
+    worldName: "Crimson stellar archive",
     interactionHint: "Hold the archive vault, or use find out more, to open active operations.",
     narration:
       "Operations archive unlocked. Reconnaissance tools, vault experiments, and threat intelligence interfaces are arranged for review.",
@@ -104,7 +104,7 @@ export const missionNodes: MissionNode[] = [
     ambient: {
       primary: "#18070A",
       secondary: "#EF4444",
-      alert: "#F97316",
+      alert: "#FDBA74",
     },
     artifact: "vault",
     signal: PROJECTS.map((project) => `${project.codename}: ${project.title}`),
@@ -122,13 +122,13 @@ export const missionNodes: MissionNode[] = [
     artifactName: "Recruiter Data Monolith",
     artifactMeaning:
       "A compact intelligence file that condenses internship readiness, evidence, and operator signal.",
-    worldName: "Holographic briefing sanctuary",
+    worldName: "Holographic cosmic dossier",
     interactionHint: "Hold the data monolith, or use find out more, to compile the intelligence file.",
     narration:
       "The intelligence file is open. Internship signal active, with availability for cybersecurity-focused roles in Germany or remote.",
     narrationSrc: `${import.meta.env.BASE_URL}audio/narration/file.mp3`,
     ambient: {
-      primary: "#182033",
+      primary: "#111827",
       secondary: "#A78BFA",
       alert: "#F8FAFC",
     },
@@ -149,15 +149,15 @@ export const missionNodes: MissionNode[] = [
     artifactName: "Quantum Relay Beacon",
     artifactMeaning:
       "A secure signal tower that turns the environment into a verified communication gateway.",
-    worldName: "Cyan transmission horizon",
+    worldName: "Cyan signal galaxy",
     interactionHint: "Hold the relay beacon, or use find out more, to open the secure transmission channel.",
     narration:
       "Secure transmission channel established. The contact endpoint is verified and ready for a concise mission brief.",
     narrationSrc: `${import.meta.env.BASE_URL}audio/narration/transmission.mp3`,
     ambient: {
-      primary: "#061B24",
+      primary: "#03212B",
       secondary: "#22D3EE",
-      alert: "#E0F2FE",
+      alert: "#FDE68A",
     },
     artifact: "beacon",
     signal: [SITE.email, "linkedin.com/in/manas-ranjan-rao", "github.com/LLawliet188"],

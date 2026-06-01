@@ -68,8 +68,8 @@ const ObjectDirective = ({
         Hold artifact / release at 100%
       </span>
     </div>
-    <p className="mt-3 font-body text-xs leading-5 text-white/52">{node.artifactMeaning}</p>
-    <p className="mt-2 font-body text-xs leading-5 text-white/38">{node.interactionHint}</p>
+    <p className="artifact-context mt-3 font-body text-xs leading-5 text-white/52">{node.artifactMeaning}</p>
+    <p className="artifact-context mt-2 font-body text-xs leading-5 text-white/38">{node.interactionHint}</p>
   </motion.div>
 );
 

@@ -40,28 +40,87 @@ type ArtifactRenderProps = {
 
 type SceneWorldProfile = {
   architecture: "chamber" | "reactor" | "matrix" | "vault" | "monolith" | "relay";
+  dust: string;
   horizon: string;
+  nebula: [string, string, string];
+  planet: string;
+  rim: string;
+  solar: string;
   shadow: string;
 };
 
 const HOLD_THRESHOLD_MS = 880;
 
 const sceneWorldProfiles: Record<MissionId, SceneWorldProfile> = {
-  arsenal: { architecture: "matrix", horizon: "#8B5CF6", shadow: "#090314" },
-  boot: { architecture: "chamber", horizon: "#38BDF8", shadow: "#030814" },
-  file: { architecture: "monolith", horizon: "#F8FAFC", shadow: "#070A12" },
-  identity: { architecture: "reactor", horizon: "#00C8FF", shadow: "#041224" },
-  operations: { architecture: "vault", horizon: "#F97316", shadow: "#130306" },
-  transmission: { architecture: "relay", horizon: "#E0F2FE", shadow: "#031018" },
+  arsenal: {
+    architecture: "matrix",
+    dust: "#E879F9",
+    horizon: "#A855F7",
+    nebula: ["#19072F", "#8B5CF6", "#F0ABFC"],
+    planet: "#2E1065",
+    rim: "#FDE68A",
+    solar: "#FBBF24",
+    shadow: "#05020B",
+  },
+  boot: {
+    architecture: "chamber",
+    dust: "#7DD3FC",
+    horizon: "#38BDF8",
+    nebula: ["#08112E", "#2563EB", "#C7D2FE"],
+    planet: "#0F1B3D",
+    rim: "#E5E7EB",
+    solar: "#FACC15",
+    shadow: "#030712",
+  },
+  file: {
+    architecture: "monolith",
+    dust: "#DDD6FE",
+    horizon: "#A78BFA",
+    nebula: ["#111827", "#7C3AED", "#F8FAFC"],
+    planet: "#1E1B4B",
+    rim: "#F8FAFC",
+    solar: "#FDE68A",
+    shadow: "#070A12",
+  },
+  identity: {
+    architecture: "reactor",
+    dust: "#67E8F9",
+    horizon: "#00C8FF",
+    nebula: ["#041224", "#0284C7", "#E0F2FE"],
+    planet: "#082F49",
+    rim: "#E2E8F0",
+    solar: "#FDE68A",
+    shadow: "#020817",
+  },
+  operations: {
+    architecture: "vault",
+    dust: "#FDBA74",
+    horizon: "#F97316",
+    nebula: ["#18070A", "#DC2626", "#FDBA74"],
+    planet: "#451A03",
+    rim: "#FED7AA",
+    solar: "#F59E0B",
+    shadow: "#100206",
+  },
+  transmission: {
+    architecture: "relay",
+    dust: "#A7F3D0",
+    horizon: "#22D3EE",
+    nebula: ["#03212B", "#06B6D4", "#FEF3C7"],
+    planet: "#064E3B",
+    rim: "#ECFEFF",
+    solar: "#FDE68A",
+    shadow: "#021014",
+  },
 };
 
 const cameraPositions = [
-  new Vector3(0.12, 0.35, 6.65),
-  new Vector3(1.08, 0.24, 6.25),
-  new Vector3(-0.88, 0.78, 6.05),
-  new Vector3(1.28, -0.2, 5.9),
-  new Vector3(-1.16, 0.5, 6.25),
-  new Vector3(0.2, 0.2, 6.5),
+  new Vector3(0.18, 0.52, 7.15),
+  new Vector3(1.22, 0.18, 6.52),
+  new Vector3(-1.1, 0.82, 6.0),
+  new Vector3(1.38, -0.18, 5.55),
+  new Vector3(-1.2, 0.56, 6.1),
+  new Vector3(0.34, 0.24, 6.82),
 ];
 
 const artifactPosition = new Vector3(1.16, -0.04, 0);
@@ -105,11 +164,47 @@ const createParticleGeometry = (count: number, radius: number, depth: number, se
   return geometry;
 };
 
+const createGalaxyGeometry = (
+  count: number,
+  radius: number,
+  depth: number,
+  seed: number,
+  profile: SceneWorldProfile,
+) => {
+  const geometry = new BufferGeometry();
+  const positions: number[] = [];
+  const colors: number[] = [];
+  const colorA = new Color(profile.nebula[0]);
+  const colorB = new Color(profile.nebula[1]);
+  const colorC = new Color(profile.nebula[2]);
+  const solar = new Color(profile.solar);
+
+  for (let index = 0; index < count; index += 1) {
+    const arm = index % 4;
+    const radial = Math.pow(seeded(seed + index * 0.91), 1.65) * radius;
+    const sweep = radial * 0.72 + arm * Math.PI * 0.5 + seeded(seed + index * 1.33) * 0.72;
+    const scatter = (seeded(seed + index * 2.4) - 0.5) * (0.26 + radial * 0.025);
+    const x = Math.cos(sweep) * radial * 1.62 + scatter;
+    const y = (seeded(seed + index * 3.7) - 0.5) * depth * (0.16 + radial / (radius * 7.8));
+    const z = Math.sin(sweep) * radial * 0.72 - depth * 0.42 + scatter * 0.55;
+    const mix = seeded(seed + index * 4.2);
+
+    objectColor.copy(mix > 0.86 ? solar : mix > 0.56 ? colorC : colorB).lerp(colorA, radial / radius * 0.32);
+    positions.push(x, y, z);
+    colors.push(objectColor.r, objectColor.g, objectColor.b);
+  }
+
+  geometry.setAttribute("position", new Float32BufferAttribute(positions, 3));
+  geometry.setAttribute("color", new Float32BufferAttribute(colors, 3));
+  return geometry;
+};
+
 const CameraRig = () => {
   const {
     activationProgressRef,
     activeNode,
     intensityRef,
+    progressRef,
     reducedMotion,
     sceneProgressRef,
     transitionProgressRef,
@@ -119,19 +214,20 @@ const CameraRig = () => {
     const elapsed = clock.getElapsedTime();
     const activationProgress = activationProgressRef.current;
     const intensity = intensityRef.current;
+    const progress = progressRef.current;
     const sceneProgress = sceneProgressRef.current;
     const transitionProgress = transitionProgressRef.current;
     const index = getNodeIndex(activeNode);
     const nextIndex = Math.min(missionNodes.length - 1, index + 1);
     const base = cameraPositions[index];
     const next = cameraPositions[nextIndex];
-    const orbit = reducedMotion ? 0 : Math.sin(elapsed * 0.13 + index) * 0.24;
-    const rise = reducedMotion ? 0 : Math.cos(elapsed * 0.17 + index * 0.6) * 0.1;
+    const orbit = reducedMotion ? 0 : Math.sin(elapsed * 0.13 + index + progress * 2.4) * 0.34;
+    const rise = reducedMotion ? 0 : Math.cos(elapsed * 0.17 + index * 0.6) * 0.14;
     const target = cameraTargetVector.copy(base).lerp(next, transitionProgress * 0.44);
 
-    target.x += orbit + pointer.x * 0.08 + (sceneProgress - 0.5) * 0.18;
-    target.y += rise + pointer.y * 0.06 + Math.sin(sceneProgress * Math.PI) * 0.14;
-    target.z -= intensity * 0.54 + transitionProgress * 0.18 + activationProgress * 0.52;
+    target.x += orbit + pointer.x * 0.08 + (sceneProgress - 0.5) * 0.26;
+    target.y += rise + pointer.y * 0.06 + Math.sin(sceneProgress * Math.PI) * 0.2;
+    target.z -= progress * 0.92 + intensity * 0.54 + transitionProgress * 0.32 + activationProgress * 0.6;
 
     camera.position.lerp(target, 0.042);
     camera.lookAt(
@@ -140,7 +236,7 @@ const CameraRig = () => {
       cameraFocus.z,
     );
     if ("fov" in camera) {
-      camera.fov = MathUtils.lerp(camera.fov, 42 - activationProgress * 3.6, 0.04);
+      camera.fov = MathUtils.lerp(camera.fov, 43 - transitionProgress * 1.2 - activationProgress * 3.8, 0.04);
       camera.updateProjectionMatrix();
     }
   });
@@ -151,15 +247,19 @@ const CameraRig = () => {
 const EnergyCloud = ({
   colorA,
   colorB,
+  colorC,
   opacity,
   position,
+  rotation = [0, 0, 0],
   scale,
   speed,
 }: {
   colorA: string;
   colorB: string;
+  colorC?: string;
   opacity: number;
   position: [number, number, number];
+  rotation?: [number, number, number];
   scale: [number, number, number];
   speed: number;
 }) => {
@@ -169,11 +269,12 @@ const EnergyCloud = ({
     () => ({
       uColorA: { value: new Color(colorA) },
       uColorB: { value: new Color(colorB) },
+      uColorC: { value: new Color(colorC ?? colorB) },
       uIntensity: { value: 0 },
       uOpacity: { value: opacity },
       uTime: { value: 0 },
     }),
-    [colorA, colorB, opacity],
+    [colorA, colorB, colorC, opacity],
   );
 
   useFrame(({ clock }) => {
@@ -187,7 +288,7 @@ const EnergyCloud = ({
   });
 
   return (
-    <mesh position={position} scale={scale}>
+    <mesh position={position} rotation={rotation} scale={scale}>
       <planeGeometry args={[1, 1, 1, 1]} />
       <shaderMaterial
         ref={materialRef}
@@ -198,6 +299,7 @@ const EnergyCloud = ({
               varying vec2 vUv;
               uniform vec3 uColorA;
               uniform vec3 uColorB;
+              uniform vec3 uColorC;
               uniform float uIntensity;
               uniform float uOpacity;
               uniform float uTime;
@@ -223,11 +325,13 @@ const EnergyCloud = ({
                 float n = noise(uv * 3.1 + vec2(uTime * 0.045, -uTime * 0.03));
                 n += noise(uv * 7.4 + vec2(-uTime * 0.026, uTime * 0.04)) * 0.48;
                 n += noise(uv * 14.0 + uTime * 0.018) * 0.2;
+                float spiral = sin(atan(p.y, p.x) * 3.0 + length(p) * 7.2 - uTime * 0.22);
                 float haze = smoothstep(0.2, 1.2, n);
                 float vignette = 1.0 - smoothstep(0.36, 1.28, length(p));
                 float ray = pow(max(0.0, 1.0 - abs(p.x * 0.58 + sin(uv.y * 8.0 + uTime * 0.34) * 0.22)), 3.0);
-                float alpha = (haze * 0.24 + ray * 0.11) * vignette * (uOpacity + uIntensity * 0.22);
-                vec3 color = mix(uColorA, uColorB, clamp(n, 0.0, 1.0));
+                float galactic = smoothstep(-0.35, 0.78, spiral + n * 0.7);
+                float alpha = (haze * 0.2 + ray * 0.1 + galactic * 0.12) * vignette * (uOpacity + uIntensity * 0.22);
+                vec3 color = mix(mix(uColorA, uColorB, clamp(n, 0.0, 1.0)), uColorC, galactic * 0.42);
                 gl_FragColor = vec4(color, alpha);
               }
             `}
@@ -300,6 +404,144 @@ const NeuralParticleLayer = ({
         vertexColors
       />
     </points>
+  );
+};
+
+const GalacticStarRiver = ({ quality }: { quality: RenderQuality }) => {
+  const pointsRef = useRef<Points>(null);
+  const {
+    activationProgressRef,
+    activeNode,
+    intensityRef,
+    reducedMotion,
+    sceneProgressRef,
+    transitionProgressRef,
+  } = useEnvironment();
+  const profile = sceneWorldProfiles[activeNode];
+  const settings = renderQualitySettings[quality];
+  const count = Math.round((quality === "high" ? 1800 : quality === "medium" ? 1150 : 560) * settings.particleScale);
+  const geometry = useMemo(
+    () => createGalaxyGeometry(count, 8.8, 16, getNodeIndex(activeNode) * 37 + 91, profile),
+    [activeNode, count, profile],
+  );
+
+  useFrame(({ clock }) => {
+    if (!pointsRef.current) return;
+    const elapsed = clock.getElapsedTime();
+    const activationProgress = activationProgressRef.current;
+    const intensity = intensityRef.current;
+    const sceneProgress = sceneProgressRef.current;
+    const transitionProgress = transitionProgressRef.current;
+
+    pointsRef.current.rotation.y =
+      (reducedMotion ? 0 : elapsed * 0.006) + sceneProgress * 0.2 + transitionProgress * 0.12;
+    pointsRef.current.rotation.z = -0.18 + Math.sin(elapsed * 0.035) * 0.04;
+    pointsRef.current.position.z = -6.4 - sceneProgress * 1.2 - transitionProgress * 0.6 - activationProgress * 0.82;
+    pointsRef.current.position.x = Math.sin(elapsed * 0.045 + getNodeIndex(activeNode)) * 0.42;
+    pointsRef.current.position.y = 0.18 + Math.cos(elapsed * 0.04) * 0.16 + intensity * 0.12;
+  });
+
+  return (
+    <points ref={pointsRef} geometry={geometry} rotation={[0.74, -0.18, -0.18]} scale={[1.2, 0.82, 1.05]}>
+      <pointsMaterial
+        blending={AdditiveBlending}
+        depthWrite={false}
+        opacity={reducedMotion ? 0.34 : 0.56}
+        size={quality === "high" ? 0.038 : quality === "medium" ? 0.044 : 0.052}
+        sizeAttenuation
+        transparent
+        vertexColors
+      />
+    </points>
+  );
+};
+
+const PlanetarySilhouette = ({ quality }: { quality: RenderQuality }) => {
+  const groupRef = useRef<Group>(null);
+  const { activationProgress, activeNode, intensity, reducedMotion, sceneProgress, transitionProgress } =
+    useEnvironment();
+  const profile = sceneWorldProfiles[activeNode];
+  const node = missionNodes.find((item) => item.id === activeNode) ?? missionNodes[0];
+  const segments = quality === "high" ? 72 : quality === "medium" ? 48 : 32;
+
+  useFrame(({ clock }) => {
+    if (!groupRef.current) return;
+    const elapsed = clock.getElapsedTime();
+    groupRef.current.rotation.y = reducedMotion ? 0 : elapsed * 0.012 + sceneProgress * 0.18;
+    groupRef.current.rotation.z = Math.sin(elapsed * 0.035) * 0.04 + transitionProgress * 0.04;
+    groupRef.current.position.z = -10.4 - transitionProgress * 0.9 - activationProgress * 0.42;
+    groupRef.current.position.x = -5.25 + Math.sin(elapsed * 0.04 + getNodeIndex(activeNode)) * 0.32;
+  });
+
+  return (
+    <group ref={groupRef} position={[-5.25, 1.2, -10.4]}>
+      <mesh scale={[1.52, 1.52, 1.52]}>
+        <sphereGeometry args={[1, segments, segments * 0.6]} />
+        <meshBasicMaterial color={profile.planet} opacity={0.36 + activationProgress * 0.06} transparent />
+      </mesh>
+      <mesh rotation={[Math.PI / 2.7, 0.16, -0.42]} scale={[2.25, 2.25, 1]}>
+        <ringGeometry args={[0.82, 1.2, renderQualitySettings[quality].ringSegments]} />
+        <meshBasicMaterial
+          blending={AdditiveBlending}
+          color={node.ambient.secondary}
+          depthWrite={false}
+          opacity={0.1 + intensity * 0.06 + activationProgress * 0.06}
+          side={DoubleSide}
+          transparent
+        />
+      </mesh>
+      <mesh scale={[1.76, 1.76, 1.76]}>
+        <sphereGeometry args={[1, segments, segments * 0.5]} />
+        <meshBasicMaterial
+          blending={AdditiveBlending}
+          color={profile.rim}
+          depthWrite={false}
+          opacity={0.022 + activationProgress * 0.018}
+          transparent
+          wireframe
+        />
+      </mesh>
+    </group>
+  );
+};
+
+const CosmicLightCorridor = ({ quality }: { quality: RenderQuality }) => {
+  const groupRef = useRef<Group>(null);
+  const { activationProgress, activeNode, intensity, reducedMotion, sceneProgress, transitionProgress } =
+    useEnvironment();
+  const profile = sceneWorldProfiles[activeNode];
+  const node = missionNodes.find((item) => item.id === activeNode) ?? missionNodes[0];
+  const bands = quality === "low" ? [0, 1, 2] : [0, 1, 2, 3, 4];
+
+  useFrame(({ clock }) => {
+    if (!groupRef.current) return;
+    const elapsed = clock.getElapsedTime();
+    groupRef.current.rotation.y = (reducedMotion ? 0 : elapsed * 0.018) + sceneProgress * 0.35;
+    groupRef.current.rotation.x = 0.42 + Math.sin(elapsed * 0.05) * 0.06;
+    groupRef.current.position.z = -2.2 - transitionProgress * 0.9 - activationProgress * 0.56;
+  });
+
+  return (
+    <group ref={groupRef} position={[0.72, -0.18, -2.2]}>
+      {bands.map((band) => (
+        <mesh
+          key={`corridor-${band}`}
+          rotation={[Math.PI / 2 + band * 0.18, band * 0.56, band * 0.28]}
+          scale={[1 + band * 0.2, 1 + band * 0.2, 1]}
+        >
+          <torusGeometry
+            args={[2.2 + band * 0.46, band % 2 === 0 ? 0.004 : 0.007, 8, renderQualitySettings[quality].trailSegments]}
+          />
+          <meshBasicMaterial
+            blending={AdditiveBlending}
+            color={band % 2 === 0 ? profile.solar : node.ambient.secondary}
+            depthWrite={false}
+            opacity={0.1 + intensity * 0.08 + activationProgress * 0.08 - band * 0.01}
+            transparent
+          />
+        </mesh>
+      ))}
+    </group>
   );
 };
 
@@ -591,60 +833,66 @@ const CinematicEnvironment = ({ quality }: { quality: RenderQuality }) => {
   const { activeNode, reducedMotion } = useEnvironment();
   const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
   const node = missionNodes.find((item) => item.id === activeNode) ?? missionNodes[0];
+  const profile = sceneWorldProfiles[activeNode];
   const settings = renderQualitySettings[quality];
   const particleScale = reducedMotion ? settings.particleScale * 0.42 : settings.particleScale;
 
   return (
     <group>
+      <GalacticStarRiver quality={quality} />
       <EnergyCloud
-        colorA={node.ambient.primary}
-        colorB={node.ambient.secondary}
-        opacity={0.86}
-        position={[0, 0.5, -7.8]}
-        scale={[16, 9.5, 1]}
-        speed={1}
+        colorA={profile.nebula[0]}
+        colorB={profile.nebula[1]}
+        colorC={profile.nebula[2]}
+        opacity={0.98}
+        position={[0.2, 0.38, -9.6]}
+        rotation={[0, 0, -0.16]}
+        scale={[19, 11, 1]}
+        speed={0.86}
       />
       <EnergyCloud
         colorA="#020107"
-        colorB={node.ambient.alert}
-        opacity={0.58}
-        position={[1.6, -0.35, -5.4]}
-        scale={[9.5, 6.4, 1]}
-        speed={0.72}
+        colorB={profile.solar}
+        colorC={node.ambient.alert}
+        opacity={0.48}
+        position={[2.1, -0.24, -5.8]}
+        rotation={[0.05, 0, 0.12]}
+        scale={[10.8, 6.8, 1]}
+        speed={0.68}
       />
+      <PlanetarySilhouette quality={quality} />
       <NeuralParticleLayer
-        count={Math.round((isMobile ? 280 : 940) * particleScale)}
-        depth={18}
-        opacity={0.52}
-        radius={15}
+        count={Math.round((isMobile ? 320 : 1080) * particleScale)}
+        depth={24}
+        opacity={0.46}
+        radius={18}
         seed={19}
-        size={isMobile ? 0.036 : 0.028}
-        speed={reducedMotion ? 0.004 : 0.012}
+        size={isMobile ? 0.034 : 0.026}
+        speed={reducedMotion ? 0.003 : 0.009}
       />
       <NeuralParticleLayer
-        count={Math.round((isMobile ? 170 : 620) * particleScale)}
-        depth={10}
-        opacity={0.62}
-        radius={8.4}
+        count={Math.round((isMobile ? 210 : 720) * particleScale)}
+        depth={13}
+        opacity={0.58}
+        radius={10.2}
         seed={43}
-        size={isMobile ? 0.052 : 0.04}
-        speed={reducedMotion ? -0.004 : -0.019}
+        size={isMobile ? 0.05 : 0.038}
+        speed={reducedMotion ? -0.003 : -0.014}
       />
       <NeuralParticleLayer
-        count={Math.round((isMobile ? 56 : 240) * particleScale)}
-        depth={6}
-        opacity={0.34}
-        radius={4.8}
+        count={Math.round((isMobile ? 76 : 280) * particleScale)}
+        depth={7}
+        opacity={0.3}
+        radius={5.6}
         seed={71}
         size={isMobile ? 0.072 : 0.058}
         speed={reducedMotion ? 0.003 : 0.031}
       />
+      <CosmicLightCorridor quality={quality} />
       <EnergyTrails quality={quality} />
       <VolumetricLightRays quality={quality} />
       <HolographicScanVolume quality={quality} />
       <EnergyHorizon quality={quality} />
-      <DigitalLandscape quality={quality} />
-      <ArchitecturalForms quality={quality} />
     </group>
   );
 };
@@ -1412,6 +1660,7 @@ const SceneLighting = ({ quality }: { quality: RenderQuality }) => {
   const keyRef = useRef<Group>(null);
   const { activationProgress, activeNode, intensity, mode, transitionProgress } = useEnvironment();
   const node = missionNodes.find((item) => item.id === activeNode) ?? missionNodes[0];
+  const profile = sceneWorldProfiles[activeNode];
 
   useFrame(({ clock }) => {
     if (!keyRef.current) return;
@@ -1422,30 +1671,30 @@ const SceneLighting = ({ quality }: { quality: RenderQuality }) => {
 
   return (
     <>
-      <ambientLight intensity={0.15 + transitionProgress * 0.08 + activationProgress * 0.04} />
+      <ambientLight intensity={0.18 + transitionProgress * 0.08 + activationProgress * 0.05} />
       <hemisphereLight
-        color={node.ambient.secondary}
-        groundColor="#040108"
-        intensity={0.34 + intensity * 0.18 + activationProgress * 0.12}
+        color={profile.nebula[2]}
+        groundColor={profile.nebula[0]}
+        intensity={0.4 + intensity * 0.2 + activationProgress * 0.14}
       />
       <group ref={keyRef}>
         <directionalLight
-          color={node.ambient.secondary}
-          intensity={2.2 + intensity * 1.5 + activationProgress * 0.8}
-          position={[3.8, 3.2, 4.4]}
+          color={profile.rim}
+          intensity={2.4 + intensity * 1.4 + activationProgress * 0.9}
+          position={[4.2, 3.6, 4.8]}
         />
         <spotLight
-          angle={0.38}
-          color={mode === "breach" ? node.ambient.alert : node.ambient.secondary}
-          intensity={5.2 + intensity * 5.2 + activationProgress * 2.4}
+          angle={0.42}
+          color={mode === "breach" ? profile.solar : node.ambient.secondary}
+          intensity={5.6 + intensity * 5.4 + activationProgress * 2.8}
           penumbra={0.8}
           position={[-2.8, 3.5, 5]}
         />
         {quality !== "low" ? (
           <spotLight
             angle={0.55}
-            color={node.ambient.alert}
-            intensity={1.6 + intensity * 2.2 + activationProgress * 1.8}
+            color={profile.solar}
+            intensity={1.8 + intensity * 2.3 + activationProgress * 2.0}
             penumbra={0.9}
             position={[3.2, -1.1, 3.4]}
           />
@@ -1461,6 +1710,7 @@ const World = ({
 }: World3DSceneProps & { quality: RenderQuality }) => {
   const { activationProgress, activeNode, intensity, reducedMotion, transitionProgress } = useEnvironment();
   const node = missionNodes.find((item) => item.id === activeNode) ?? missionNodes[0];
+  const profile = sceneWorldProfiles[activeNode];
   const activeIndex = getNodeIndex(activeNode);
   const settings = renderQualitySettings[quality];
   const visibleNodes = useMemo(
@@ -1473,19 +1723,19 @@ const World = ({
   );
 
   const fogColor = useMemo(
-    () => new Color(node.ambient.primary).lerp(new Color("#020107"), 0.56),
-    [node.ambient.primary],
+    () => new Color(profile.nebula[0]).lerp(new Color(profile.nebula[1]), 0.28).lerp(new Color("#020107"), 0.32),
+    [profile.nebula],
   );
 
   return (
     <>
-      <color args={["#020107"]} attach="background" />
+      <color args={[profile.nebula[0]]} attach="background" />
       <fog
         attach="fog"
         args={[
           fogColor,
-          5.4 - intensity * 0.4 - activationProgress * 0.6,
-          16 - transitionProgress * 1.8 - activationProgress * 1.4,
+          4.4 - intensity * 0.34 - activationProgress * 0.54,
+          18 - transitionProgress * 2.2 - activationProgress * 1.6,
         ]}
       />
       <CameraRig />

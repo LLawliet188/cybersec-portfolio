@@ -25,9 +25,10 @@ body {
   margin: 0;
   overflow-x: hidden;
   background:
-    radial-gradient(ellipse at 48% -10%, rgba(167, 139, 250, 0.2), transparent 40rem),
-    radial-gradient(ellipse at 80% 14%, rgba(255, 79, 216, 0.1), transparent 34rem),
-    linear-gradient(180deg, #020107 0%, #090414 46%, #010104 100%);
+    radial-gradient(ellipse at 48% -10%, rgba(56, 189, 248, 0.22), transparent 42rem),
+    radial-gradient(ellipse at 80% 14%, rgba(168, 85, 247, 0.16), transparent 34rem),
+    radial-gradient(ellipse at 18% 78%, rgba(251, 191, 36, 0.08), transparent 30rem),
+    linear-gradient(180deg, #050817 0%, #12071f 48%, #010104 100%);
 }
 
 * {
@@ -264,5 +265,11 @@ textarea {
     animation-iteration-count: 1 !important;
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+@media (max-height: 760px) {
+  .artifact-context {
+    display: none;
   }
 }
