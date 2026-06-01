@@ -12,13 +12,17 @@ type AudioManagerProps = {
 };
 
 type AudioApi = {
+  cancelCharge: () => void;
+  completeCharge: () => void;
   enabled: boolean;
   playInterface: (type: InterfaceSound) => void;
   setEnabled: (enabled: boolean) => void;
+  startCharge: () => void;
   toggle: () => void;
+  updateCharge: (progress: number) => void;
 };
 
-type InterfaceSound = "cancel" | "click" | "hold" | "hover" | "unlock";
+type InterfaceSound = "cancel" | "click" | "hold" | "hover" | "ready" | "unlock";
 
 const sceneAudioProfiles: Record<
   MissionId,
@@ -101,6 +105,13 @@ const AudioManagerComponent = ({
     whisperGain: GainNode;
     whisperSource: AudioBufferSourceNode;
   } | null>(null);
+  const chargeRef = useRef<{
+    context: AudioContext;
+    filter: BiquadFilterNode;
+    gain: GainNode;
+    oscillatorA: OscillatorNode;
+    oscillatorB: OscillatorNode;
+  } | null>(null);
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
   const narrationRef = useRef<Howl | null>(null);
 
@@ -110,6 +121,7 @@ const AudioManagerComponent = ({
       click: new Howl({ src: [createTone(520, 0.14)], volume: 0.08 }),
       hold: new Howl({ src: [createTone(260, 0.22)], volume: 0.07 }),
       hover: new Howl({ src: [createTone(820, 0.08)], volume: 0.035 }),
+      ready: new Howl({ src: [createTone(940, 0.2)], volume: 0.075 }),
       unlock: new Howl({ src: [createTone(680, 0.32)], volume: 0.1 }),
     }),
     [],
@@ -200,6 +212,91 @@ const AudioManagerComponent = ({
     [enabled, sounds],
   );
 
+  const stopCharge = useCallback((releaseSound?: InterfaceSound) => {
+    const charge = chargeRef.current;
+    chargeRef.current = null;
+
+    if (charge && charge.context.state !== "closed") {
+      const now = charge.context.currentTime;
+      charge.gain.gain.cancelScheduledValues(now);
+      charge.gain.gain.setTargetAtTime(0, now, 0.045);
+      window.setTimeout(() => {
+        try {
+          charge.oscillatorA.stop();
+          charge.oscillatorB.stop();
+        } catch {
+          // The oscillator may already be stopped if the hold ended on a strict-mode remount.
+        }
+        if (charge.context.state !== "closed") {
+          void charge.context.close().catch(() => undefined);
+        }
+      }, 180);
+    }
+
+    if (releaseSound) {
+      sounds[releaseSound].stop();
+      sounds[releaseSound].play();
+    }
+  }, [sounds]);
+
+  const startCharge = useCallback(() => {
+    if (!enabled) return;
+
+    stopCharge();
+    const context = new AudioContext();
+    const gain = context.createGain();
+    const filter = context.createBiquadFilter();
+    const oscillatorA = context.createOscillator();
+    const oscillatorB = context.createOscillator();
+
+    oscillatorA.type = "sine";
+    oscillatorB.type = "triangle";
+    oscillatorA.frequency.value = 96;
+    oscillatorB.frequency.value = 146;
+    filter.type = "lowpass";
+    filter.frequency.value = 620;
+    filter.Q.value = 5.5;
+    gain.gain.value = 0;
+
+    oscillatorA.connect(filter);
+    oscillatorB.connect(filter);
+    filter.connect(gain);
+    gain.connect(context.destination);
+    oscillatorA.start();
+    oscillatorB.start();
+
+    chargeRef.current = { context, filter, gain, oscillatorA, oscillatorB };
+    void context.resume().catch(() => undefined);
+    const now = context.currentTime;
+    gain.gain.setTargetAtTime(0.006 * volume, now, 0.035);
+    sounds.hold.stop();
+    sounds.hold.play();
+  }, [enabled, sounds, stopCharge, volume]);
+
+  const updateCharge = useCallback((progress: number) => {
+    if (!enabled || !chargeRef.current) return;
+
+    const charge = chargeRef.current;
+    const clamped = Math.min(Math.max(progress, 0), 1);
+    const now = charge.context.currentTime;
+    const curved = clamped * clamped;
+
+    charge.gain.gain.setTargetAtTime((0.006 + curved * 0.034) * volume, now, 0.035);
+    charge.filter.frequency.setTargetAtTime(520 + curved * 1180, now, 0.045);
+    charge.oscillatorA.frequency.setTargetAtTime(92 + curved * 86, now, 0.045);
+    charge.oscillatorB.frequency.setTargetAtTime(144 + curved * 172, now, 0.045);
+  }, [enabled, volume]);
+
+  const cancelCharge = useCallback(() => {
+    if (!enabled) return;
+    stopCharge("cancel");
+  }, [enabled, stopCharge]);
+
+  const completeCharge = useCallback(() => {
+    if (!enabled) return;
+    stopCharge("unlock");
+  }, [enabled, stopCharge]);
+
   const toggle = useCallback(() => {
     setEnabled(!enabled);
   }, [enabled, setEnabled]);
@@ -208,6 +305,7 @@ const AudioManagerComponent = ({
     Howler.mute(!enabled);
     Howler.volume(Math.min(Math.max(volume, 0), 1));
     if (!enabled) {
+      stopCharge();
       window.speechSynthesis?.cancel();
       const ambience = ambienceRef.current;
       if (ambience && ambience.context.state !== "closed") {
@@ -221,7 +319,7 @@ const AudioManagerComponent = ({
 
     const ambience = ensureAmbience();
     void ambience.context.resume().catch(() => undefined);
-  }, [enabled, ensureAmbience, volume]);
+  }, [enabled, ensureAmbience, stopCharge, volume]);
 
   useEffect(() => {
     if (!enabled || !ambienceRef.current || ambienceRef.current.context.state === "closed") {
@@ -310,22 +408,27 @@ const AudioManagerComponent = ({
 
   useEffect(() => {
     window.cyberAudio = {
+      cancelCharge,
+      completeCharge,
       enabled,
       playInterface,
       setEnabled,
+      startCharge,
       toggle,
+      updateCharge,
     };
 
     return () => {
       delete window.cyberAudio;
     };
-  }, [enabled, playInterface, toggle]);
+  }, [cancelCharge, completeCharge, enabled, playInterface, startCharge, toggle, updateCharge]);
 
   useEffect(() => {
     return () => {
       Object.values(sounds).forEach((sound) => sound.unload());
       narrationRef.current?.stop();
       narrationRef.current?.unload();
+      stopCharge();
       window.speechSynthesis?.cancel();
       if (ambienceRef.current) {
         const ambience = ambienceRef.current;

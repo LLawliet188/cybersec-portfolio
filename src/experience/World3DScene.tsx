@@ -1,5 +1,5 @@
 import { memo, useMemo, useRef, useState } from "react";
-import { Canvas, useFrame, type ThreeEvent } from "@react-three/fiber";
+import { Canvas, useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
 import { Environment, Float, MeshDistortMaterial, Sparkles, Stars } from "@react-three/drei";
 import {
   AdditiveBlending,
@@ -17,6 +17,12 @@ import {
 } from "three";
 import { useEnvironment } from "./EnvironmentProvider";
 import { missionNodes } from "./missionContent";
+import {
+  detectRenderQuality,
+  renderQualitySettings,
+  shouldShowPerformanceDebug,
+  type RenderQuality,
+} from "./performance";
 import type { MissionId, MissionNode } from "./types";
 
 type World3DSceneProps = {
@@ -27,6 +33,7 @@ type ArtifactRenderProps = {
   activationProgress: number;
   active: boolean;
   node: MissionNode;
+  quality: RenderQuality;
   revealed: boolean;
   hovered: boolean;
 };
@@ -60,6 +67,8 @@ const cameraPositions = [
 const artifactPosition = new Vector3(1.16, -0.04, 0);
 const mobileArtifactPosition = new Vector3(0, -1.18, 0);
 const cameraFocus = new Vector3(0.52, -0.03, 0);
+const cameraTargetVector = new Vector3();
+const artifactOffsetVector = new Vector3();
 const targetScaleVector = new Vector3();
 const targetPositionVector = new Vector3();
 const objectColor = new Color();
@@ -97,18 +106,28 @@ const createParticleGeometry = (count: number, radius: number, depth: number, se
 };
 
 const CameraRig = () => {
-  const { activationProgress, activeNode, intensity, reducedMotion, sceneProgress, transitionProgress } =
-    useEnvironment();
+  const {
+    activationProgressRef,
+    activeNode,
+    intensityRef,
+    reducedMotion,
+    sceneProgressRef,
+    transitionProgressRef,
+  } = useEnvironment();
 
   useFrame(({ camera, clock, pointer }) => {
     const elapsed = clock.getElapsedTime();
+    const activationProgress = activationProgressRef.current;
+    const intensity = intensityRef.current;
+    const sceneProgress = sceneProgressRef.current;
+    const transitionProgress = transitionProgressRef.current;
     const index = getNodeIndex(activeNode);
     const nextIndex = Math.min(missionNodes.length - 1, index + 1);
     const base = cameraPositions[index];
     const next = cameraPositions[nextIndex];
     const orbit = reducedMotion ? 0 : Math.sin(elapsed * 0.13 + index) * 0.24;
     const rise = reducedMotion ? 0 : Math.cos(elapsed * 0.17 + index * 0.6) * 0.1;
-    const target = base.clone().lerp(next, transitionProgress * 0.44);
+    const target = cameraTargetVector.copy(base).lerp(next, transitionProgress * 0.44);
 
     target.x += orbit + pointer.x * 0.08 + (sceneProgress - 0.5) * 0.18;
     target.y += rise + pointer.y * 0.06 + Math.sin(sceneProgress * Math.PI) * 0.14;
@@ -145,7 +164,7 @@ const EnergyCloud = ({
   speed: number;
 }) => {
   const materialRef = useRef<ShaderMaterial>(null);
-  const { activationProgress, intensity, transitionProgress } = useEnvironment();
+  const { activationProgressRef, intensityRef, transitionProgressRef } = useEnvironment();
   const uniforms = useMemo(
     () => ({
       uColorA: { value: new Color(colorA) },
@@ -159,6 +178,9 @@ const EnergyCloud = ({
 
   useFrame(({ clock }) => {
     if (!materialRef.current) return;
+    const activationProgress = activationProgressRef.current;
+    const intensity = intensityRef.current;
+    const transitionProgress = transitionProgressRef.current;
     materialRef.current.uniforms.uTime.value = clock.getElapsedTime() * speed;
     materialRef.current.uniforms.uIntensity.value =
       intensity + transitionProgress * 0.55 + activationProgress * 0.65;
@@ -241,7 +263,14 @@ const NeuralParticleLayer = ({
   speed: number;
 }) => {
   const pointsRef = useRef<Points>(null);
-  const { activationProgress, intensity, reducedMotion, transitionProgress } = useEnvironment();
+  const {
+    activationProgress,
+    activationProgressRef,
+    intensity,
+    intensityRef,
+    reducedMotion,
+    transitionProgressRef,
+  } = useEnvironment();
   const geometry = useMemo(
     () => createParticleGeometry(count, radius, depth, seed),
     [count, depth, radius, seed],
@@ -250,9 +279,13 @@ const NeuralParticleLayer = ({
   useFrame(({ clock }) => {
     if (!pointsRef.current) return;
     const elapsed = clock.getElapsedTime();
-    pointsRef.current.rotation.y = elapsed * speed + transitionProgress * 0.28 + activationProgress * 0.18;
+    const liveActivation = activationProgressRef.current;
+    const liveIntensity = intensityRef.current;
+    const transitionProgress = transitionProgressRef.current;
+    pointsRef.current.rotation.y = elapsed * speed + transitionProgress * 0.28 + liveActivation * 0.18;
     pointsRef.current.rotation.x = Math.sin(elapsed * speed * 0.52) * 0.08;
-    pointsRef.current.position.z = Math.sin(elapsed * 0.15 + seed) * 0.28 - intensity * 0.18 - activationProgress * 0.24;
+    pointsRef.current.position.z =
+      Math.sin(elapsed * 0.15 + seed) * 0.28 - liveIntensity * 0.18 - liveActivation * 0.24;
   });
 
   return (
@@ -270,21 +303,34 @@ const NeuralParticleLayer = ({
   );
 };
 
-const EnergyTrails = () => {
+const EnergyTrails = ({ quality }: { quality: RenderQuality }) => {
   const groupRef = useRef<Group>(null);
-  const { activationProgress, activeNode, intensity, mode, reducedMotion, sceneProgress, transitionProgress } =
-    useEnvironment();
+  const {
+    activationProgress,
+    activationProgressRef,
+    activeNode,
+    intensity,
+    mode,
+    reducedMotion,
+    sceneProgress,
+    sceneProgressRef,
+    transitionProgressRef,
+  } = useEnvironment();
   const node = missionNodes.find((item) => item.id === activeNode) ?? missionNodes[0];
-  const rings = [0, 1, 2, 3, 4, 5];
+  const settings = renderQualitySettings[quality];
+  const rings = quality === "low" ? [0, 1, 2, 3] : [0, 1, 2, 3, 4, 5];
 
   useFrame(({ clock }) => {
     if (!groupRef.current) return;
     const elapsed = clock.getElapsedTime();
+    const liveActivation = activationProgressRef.current;
+    const liveSceneProgress = sceneProgressRef.current;
+    const transitionProgress = transitionProgressRef.current;
     groupRef.current.rotation.y =
-      elapsed * (reducedMotion ? 0.02 : 0.052 + activationProgress * 0.035) +
-      sceneProgress * 0.5;
+      elapsed * (reducedMotion ? 0.02 : 0.052 + liveActivation * 0.035) +
+      liveSceneProgress * 0.5;
     groupRef.current.rotation.x = Math.sin(elapsed * 0.11) * 0.12 + transitionProgress * 0.18;
-    groupRef.current.position.z = -1.4 - transitionProgress * 0.24 - activationProgress * 0.32;
+    groupRef.current.position.z = -1.4 - transitionProgress * 0.24 - liveActivation * 0.32;
   });
 
   return (
@@ -299,7 +345,9 @@ const EnergyTrails = () => {
           ]}
           scale={[1 + ring * 0.12, 1 + ring * 0.08, 1]}
         >
-          <torusGeometry args={[2.15 + ring * 0.22, ring % 2 === 0 ? 0.004 : 0.007, 8, 220]} />
+          <torusGeometry
+            args={[2.15 + ring * 0.22, ring % 2 === 0 ? 0.004 : 0.007, 8, settings.trailSegments]}
+          />
           <meshBasicMaterial
             blending={AdditiveBlending}
             color={ring % 2 === 0 || mode === "breach" ? node.ambient.alert : node.ambient.secondary}
@@ -313,10 +361,11 @@ const EnergyTrails = () => {
   );
 };
 
-const VolumetricLightRays = () => {
+const VolumetricLightRays = ({ quality }: { quality: RenderQuality }) => {
   const groupRef = useRef<Group>(null);
   const { activationProgress, activeNode, intensity, mode, reducedMotion, transitionProgress } = useEnvironment();
   const node = missionNodes.find((item) => item.id === activeNode) ?? missionNodes[0];
+  const rayCount = quality === "low" ? 2 : 4;
 
   useFrame(({ clock }) => {
     if (!groupRef.current) return;
@@ -327,13 +376,13 @@ const VolumetricLightRays = () => {
 
   return (
     <group ref={groupRef} position={[0.6, 0.2, -2.8]}>
-      {[0, 1, 2, 3].map((ray) => (
+      {Array.from({ length: rayCount }, (_, ray) => (
         <mesh
           key={ray}
           rotation={[Math.PI / 2.15, ray * 1.38 + transitionProgress * 0.28, 0]}
           scale={[0.34 + ray * 0.08, 4.6 + ray * 0.72, 0.34]}
         >
-          <coneGeometry args={[1, 1, 64, 1, true]} />
+          <coneGeometry args={[1, 1, quality === "high" ? 48 : 32, 1, true]} />
           <meshBasicMaterial
             blending={AdditiveBlending}
             color={ray % 2 === 0 || mode === "breach" ? node.ambient.secondary : node.ambient.alert}
@@ -348,11 +397,12 @@ const VolumetricLightRays = () => {
   );
 };
 
-const HolographicScanVolume = () => {
+const HolographicScanVolume = ({ quality }: { quality: RenderQuality }) => {
   const groupRef = useRef<Group>(null);
   const { activationProgress, activeNode, intensity, reducedMotion, sceneProgress, transitionProgress } =
     useEnvironment();
   const node = missionNodes.find((item) => item.id === activeNode) ?? missionNodes[0];
+  const settings = renderQualitySettings[quality];
 
   useFrame(({ clock }) => {
     if (!groupRef.current) return;
@@ -366,7 +416,7 @@ const HolographicScanVolume = () => {
     <group ref={groupRef} position={[0.62, -0.35, -2.2]} rotation={[1.12, 0, 0]}>
       {[0, 1, 2].map((plane) => (
         <mesh key={plane} position={[0, 0, plane * 0.34 - 0.28]} scale={[5.4 + plane * 0.9, 5.4 + plane * 0.9, 1]}>
-          <ringGeometry args={[0.78 + plane * 0.22, 1.02 + plane * 0.24, 96]} />
+          <ringGeometry args={[0.78 + plane * 0.22, 1.02 + plane * 0.24, settings.ringSegments]} />
           <meshBasicMaterial
             blending={AdditiveBlending}
             color={plane === 1 ? node.ambient.alert : node.ambient.secondary}
@@ -381,12 +431,13 @@ const HolographicScanVolume = () => {
   );
 };
 
-const EnergyHorizon = () => {
+const EnergyHorizon = ({ quality }: { quality: RenderQuality }) => {
   const groupRef = useRef<Group>(null);
   const { activationProgress, activeNode, intensity, reducedMotion, sceneProgress } =
     useEnvironment();
   const node = missionNodes.find((item) => item.id === activeNode) ?? missionNodes[0];
   const profile = sceneWorldProfiles[activeNode];
+  const settings = renderQualitySettings[quality];
 
   useFrame(({ clock }) => {
     if (!groupRef.current) return;
@@ -400,7 +451,7 @@ const EnergyHorizon = () => {
     <group ref={groupRef} rotation={[1.18, 0, sceneProgress * 0.12]} position={[0.75, -1.55, -3.4]}>
       {[0, 1, 2, 3].map((layer) => (
         <mesh key={layer} position={[0, layer * -0.06, layer * -0.18]} scale={[5.2 + layer * 0.8, 1.1 + layer * 0.18, 1]}>
-          <ringGeometry args={[0.46 + layer * 0.15, 0.5 + layer * 0.18, 128]} />
+          <ringGeometry args={[0.46 + layer * 0.15, 0.5 + layer * 0.18, settings.ringSegments]} />
           <meshBasicMaterial
             blending={AdditiveBlending}
             color={layer % 2 === 0 ? profile.horizon : node.ambient.secondary}
@@ -415,15 +466,16 @@ const EnergyHorizon = () => {
   );
 };
 
-const DigitalLandscape = () => {
+const DigitalLandscape = ({ quality }: { quality: RenderQuality }) => {
   const groupRef = useRef<Group>(null);
   const { activationProgress, activeNode, intensity, reducedMotion, transitionProgress } =
     useEnvironment();
   const node = missionNodes.find((item) => item.id === activeNode) ?? missionNodes[0];
   const profile = sceneWorldProfiles[activeNode];
+  const pieceCount = quality === "high" ? 18 : quality === "medium" ? 12 : 8;
   const landscape = useMemo(
     () =>
-      Array.from({ length: 18 }, (_, index) => ({
+      Array.from({ length: pieceCount }, (_, index) => ({
         height: 0.45 + seeded(index + 50) * 1.35,
         position: [
           -5.8 + index * 0.68,
@@ -433,7 +485,7 @@ const DigitalLandscape = () => {
         rotation: seeded(index + 140) * 0.28 - 0.14,
         width: 0.34 + seeded(index + 170) * 0.72,
       })),
-    [],
+    [pieceCount],
   );
 
   useFrame(({ clock }) => {
@@ -469,15 +521,16 @@ const DigitalLandscape = () => {
   );
 };
 
-const ArchitecturalForms = () => {
+const ArchitecturalForms = ({ quality }: { quality: RenderQuality }) => {
   const groupRef = useRef<Group>(null);
   const { activationProgress, activeNode, intensity, reducedMotion, sceneProgress } =
     useEnvironment();
   const node = missionNodes.find((item) => item.id === activeNode) ?? missionNodes[0];
   const profile = sceneWorldProfiles[activeNode];
+  const columnCount = quality === "high" ? 9 : quality === "medium" ? 7 : 4;
   const columns = useMemo(
     () =>
-      Array.from({ length: 9 }, (_, index) => ({
+      Array.from({ length: columnCount }, (_, index) => ({
         height: 1.8 + seeded(index + 230) * 2.4,
         position: [
           (index - 4) * 1.55,
@@ -486,7 +539,7 @@ const ArchitecturalForms = () => {
         ] as [number, number, number],
         width: 0.08 + seeded(index + 320) * 0.1,
       })),
-    [],
+    [columnCount],
   );
 
   useFrame(({ clock }) => {
@@ -534,10 +587,12 @@ const ArchitecturalForms = () => {
   );
 };
 
-const CinematicEnvironment = () => {
+const CinematicEnvironment = ({ quality }: { quality: RenderQuality }) => {
   const { activeNode, reducedMotion } = useEnvironment();
   const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
   const node = missionNodes.find((item) => item.id === activeNode) ?? missionNodes[0];
+  const settings = renderQualitySettings[quality];
+  const particleScale = reducedMotion ? settings.particleScale * 0.42 : settings.particleScale;
 
   return (
     <group>
@@ -558,7 +613,7 @@ const CinematicEnvironment = () => {
         speed={0.72}
       />
       <NeuralParticleLayer
-        count={isMobile ? 340 : 940}
+        count={Math.round((isMobile ? 280 : 940) * particleScale)}
         depth={18}
         opacity={0.52}
         radius={15}
@@ -567,7 +622,7 @@ const CinematicEnvironment = () => {
         speed={reducedMotion ? 0.004 : 0.012}
       />
       <NeuralParticleLayer
-        count={isMobile ? 220 : 620}
+        count={Math.round((isMobile ? 170 : 620) * particleScale)}
         depth={10}
         opacity={0.62}
         radius={8.4}
@@ -576,7 +631,7 @@ const CinematicEnvironment = () => {
         speed={reducedMotion ? -0.004 : -0.019}
       />
       <NeuralParticleLayer
-        count={isMobile ? 80 : 240}
+        count={Math.round((isMobile ? 56 : 240) * particleScale)}
         depth={6}
         opacity={0.34}
         radius={4.8}
@@ -584,19 +639,29 @@ const CinematicEnvironment = () => {
         size={isMobile ? 0.072 : 0.058}
         speed={reducedMotion ? 0.003 : 0.031}
       />
-      <EnergyTrails />
-      <VolumetricLightRays />
-      <HolographicScanVolume />
-      <EnergyHorizon />
-      <DigitalLandscape />
-      <ArchitecturalForms />
+      <EnergyTrails quality={quality} />
+      <VolumetricLightRays quality={quality} />
+      <HolographicScanVolume quality={quality} />
+      <EnergyHorizon quality={quality} />
+      <DigitalLandscape quality={quality} />
+      <ArchitecturalForms quality={quality} />
     </group>
   );
 };
 
-const EnergyRings = ({ active, color }: { active: boolean; color: string }) => {
+const EnergyRings = ({
+  active,
+  color,
+  quality,
+}: {
+  active: boolean;
+  color: string;
+  quality: RenderQuality;
+}) => {
   const groupRef = useRef<Group>(null);
   const { intensity, reducedMotion } = useEnvironment();
+  const settings = renderQualitySettings[quality];
+  const rings = quality === "low" ? [0, 1, 2] : [0, 1, 2, 3, 4];
 
   useFrame(({ clock }) => {
     if (!groupRef.current) return;
@@ -607,7 +672,7 @@ const EnergyRings = ({ active, color }: { active: boolean; color: string }) => {
 
   return (
     <group ref={groupRef}>
-      {[0, 1, 2, 3, 4].map((ring) => (
+      {rings.map((ring) => (
         <mesh
           key={ring}
           rotation={[
@@ -616,7 +681,7 @@ const EnergyRings = ({ active, color }: { active: boolean; color: string }) => {
             ring * 0.3,
           ]}
         >
-          <torusGeometry args={[1.18 + ring * 0.2, 0.005 + ring * 0.0015, 10, 180]} />
+          <torusGeometry args={[1.18 + ring * 0.2, 0.005 + ring * 0.0015, 8, settings.ringSegments]} />
           <meshBasicMaterial
             blending={AdditiveBlending}
             color={color}
@@ -626,6 +691,73 @@ const EnergyRings = ({ active, color }: { active: boolean; color: string }) => {
           />
         </mesh>
       ))}
+    </group>
+  );
+};
+
+const ChargeHalo = ({
+  activationProgress,
+  active,
+  hovered,
+  node,
+  quality,
+  revealed,
+}: ArtifactRenderProps) => {
+  const groupRef = useRef<Group>(null);
+  const settings = renderQualitySettings[quality];
+  const visible = active && (hovered || activationProgress > 0.02 || revealed);
+  const safeProgress = Math.max(0.008, activationProgress);
+
+  useFrame(({ clock }) => {
+    if (!groupRef.current) return;
+    const elapsed = clock.getElapsedTime();
+    groupRef.current.rotation.z = elapsed * (0.16 + activationProgress * 0.22);
+    groupRef.current.rotation.y = Math.sin(elapsed * 0.18) * 0.18;
+  });
+
+  if (!visible) return null;
+
+  return (
+    <group ref={groupRef} rotation={[Math.PI / 2, 0, 0]} scale={1 + activationProgress * 0.12}>
+      <mesh>
+        <torusGeometry args={[1.58, 0.005, 8, settings.ringSegments]} />
+        <meshBasicMaterial
+          blending={AdditiveBlending}
+          color={node.ambient.secondary}
+          depthWrite={false}
+          opacity={0.12 + activationProgress * 0.1}
+          transparent
+        />
+      </mesh>
+      <mesh rotation={[0, 0, -Math.PI / 2]}>
+        <torusGeometry
+          args={[
+            1.58,
+            activationProgress >= 0.98 ? 0.017 : 0.011,
+            8,
+            settings.ringSegments,
+            Math.PI * 2 * safeProgress,
+          ]}
+        />
+        <meshBasicMaterial
+          blending={AdditiveBlending}
+          color={activationProgress >= 0.98 ? node.ambient.alert : node.ambient.secondary}
+          depthWrite={false}
+          opacity={0.38 + activationProgress * 0.34}
+          transparent
+        />
+      </mesh>
+      <mesh scale={[1 + activationProgress * 0.28, 1 + activationProgress * 0.28, 1]}>
+        <ringGeometry args={[1.7, 1.72, settings.ringSegments]} />
+        <meshBasicMaterial
+          blending={AdditiveBlending}
+          color={node.ambient.alert}
+          depthWrite={false}
+          opacity={activationProgress >= 0.98 ? 0.18 : 0.045 + activationProgress * 0.08}
+          side={DoubleSide}
+          transparent
+        />
+      </mesh>
     </group>
   );
 };
@@ -682,9 +814,10 @@ const ShardConstellation = ({ activationProgress, active, node, revealed }: Arti
   );
 };
 
-const InternalLattice = ({ active, node, revealed }: ArtifactRenderProps) => {
+const InternalLattice = ({ active, node, quality, revealed }: ArtifactRenderProps) => {
   const latticeRef = useRef<Group>(null);
   const glow = revealed ? 1.2 : active ? 0.8 : 0.42;
+  const settings = renderQualitySettings[quality];
 
   useFrame(({ clock }) => {
     if (!latticeRef.current) return;
@@ -696,7 +829,7 @@ const InternalLattice = ({ active, node, revealed }: ArtifactRenderProps) => {
   return (
     <group ref={latticeRef}>
       <mesh>
-        <icosahedronGeometry args={[0.42, 3]} />
+        <icosahedronGeometry args={[0.42, quality === "high" ? 3 : 2]} />
         <meshStandardMaterial
           color={node.ambient.secondary}
           emissive={node.ambient.alert}
@@ -709,7 +842,7 @@ const InternalLattice = ({ active, node, revealed }: ArtifactRenderProps) => {
         />
       </mesh>
       <mesh scale={0.36}>
-        <sphereGeometry args={[1, 36, 36]} />
+        <sphereGeometry args={[1, quality === "high" ? 30 : 20, quality === "high" ? 30 : 20]} />
         <meshBasicMaterial
           blending={AdditiveBlending}
           color={node.ambient.alert}
@@ -720,7 +853,7 @@ const InternalLattice = ({ active, node, revealed }: ArtifactRenderProps) => {
       </mesh>
       {[0, 1, 2].map((ring) => (
         <mesh key={ring} rotation={[ring * 0.7, Math.PI / 2 + ring * 0.42, ring * 0.2]}>
-          <torusGeometry args={[0.58 + ring * 0.12, 0.004, 8, 96]} />
+          <torusGeometry args={[0.58 + ring * 0.12, 0.004, 8, settings.ringSegments]} />
           <meshBasicMaterial
             blending={AdditiveBlending}
             color={ring === 1 ? node.ambient.secondary : node.ambient.alert}
@@ -734,14 +867,19 @@ const InternalLattice = ({ active, node, revealed }: ArtifactRenderProps) => {
   );
 };
 
-const EnergyEgg = ({ activationProgress, active, node, revealed }: ArtifactRenderProps) => (
+const EnergyEgg = ({ activationProgress, active, node, quality, revealed }: ArtifactRenderProps) => {
+  const shellSegments = quality === "high" ? [72, 52] : quality === "medium" ? [56, 40] : [36, 28];
+  const wireSegments = quality === "high" ? [52, 36] : quality === "medium" ? [40, 28] : [28, 18];
+  const ringSegments = renderQualitySettings[quality].ringSegments;
+
+  return (
   <group>
     <mesh scale={[0.96 + activationProgress * 0.08, 1.28 + activationProgress * 0.1, 0.96]}>
-      <sphereGeometry args={[1, 112, 80]} />
+      <sphereGeometry args={[1, shellSegments[0], shellSegments[1]]} />
       <MeshDistortMaterial
-        color={new Color(node.ambient.secondary)}
+        color={node.ambient.secondary}
         distort={active ? 0.3 + activationProgress * 0.12 : 0.18}
-        emissive={new Color(node.ambient.alert)}
+        emissive={node.ambient.alert}
         emissiveIntensity={revealed ? 0.7 : 0.28 + activationProgress * 0.28}
         metalness={0.24}
         opacity={0.54}
@@ -751,7 +889,7 @@ const EnergyEgg = ({ activationProgress, active, node, revealed }: ArtifactRende
       />
     </mesh>
     <mesh scale={[1.18 + activationProgress * 0.12, 1.45 + activationProgress * 0.18, 1.18]}>
-      <sphereGeometry args={[1, 72, 52]} />
+      <sphereGeometry args={[1, wireSegments[0], wireSegments[1]]} />
       <meshStandardMaterial
         color={node.ambient.secondary}
         emissive={node.ambient.secondary}
@@ -765,7 +903,7 @@ const EnergyEgg = ({ activationProgress, active, node, revealed }: ArtifactRende
     </mesh>
     {[0, 1, 2].map((crack) => (
       <mesh key={crack} rotation={[crack * 0.42, Math.PI / 2 + crack * 0.24, crack * 0.8]}>
-        <torusGeometry args={[0.56 + crack * 0.17, 0.0035, 8, 96]} />
+        <torusGeometry args={[0.56 + crack * 0.17, 0.0035, 8, ringSegments]} />
         <meshBasicMaterial
           blending={AdditiveBlending}
           color={node.ambient.alert}
@@ -776,29 +914,36 @@ const EnergyEgg = ({ activationProgress, active, node, revealed }: ArtifactRende
       </mesh>
     ))}
   </group>
-);
+  );
+};
 
-const ScannerLattice = ({ activationProgress, active, node, revealed }: ArtifactRenderProps) => {
-  const helix = Array.from({ length: 18 }, (_, index) => {
-    const t = index * 0.62;
-    return {
-      left: [Math.cos(t) * 0.34, -0.72 + index * 0.085, Math.sin(t) * 0.34] as [
-        number,
-        number,
-        number,
-      ],
-      right: [Math.cos(t + Math.PI) * 0.34, -0.72 + index * 0.085, Math.sin(t + Math.PI) * 0.34] as [
-        number,
-        number,
-        number,
-      ],
-    };
-  });
+const ScannerLattice = ({ activationProgress, active, node, quality, revealed }: ArtifactRenderProps) => {
+  const settings = renderQualitySettings[quality];
+  const helixCount = quality === "low" ? 10 : quality === "medium" ? 14 : 18;
+  const helix = useMemo(
+    () =>
+      Array.from({ length: helixCount }, (_, index) => {
+        const t = index * 0.62;
+        return {
+          left: [Math.cos(t) * 0.34, -0.72 + index * 0.085, Math.sin(t) * 0.34] as [
+            number,
+            number,
+            number,
+          ],
+          right: [Math.cos(t + Math.PI) * 0.34, -0.72 + index * 0.085, Math.sin(t + Math.PI) * 0.34] as [
+            number,
+            number,
+            number,
+          ],
+        };
+      }),
+    [helixCount],
+  );
 
   return (
   <group>
     <mesh>
-      <icosahedronGeometry args={[1.06, 5]} />
+      <icosahedronGeometry args={[1.06, quality === "high" ? 4 : 3]} />
       <meshStandardMaterial
         color={node.ambient.secondary}
         emissive={node.ambient.alert}
@@ -812,7 +957,7 @@ const ScannerLattice = ({ activationProgress, active, node, revealed }: Artifact
     </mesh>
     {[0, 1, 2, 3].map((ring) => (
       <mesh key={ring} rotation={[ring * 0.32, Math.PI / 2 + ring * 0.38, ring * 0.46]}>
-        <torusGeometry args={[0.92 + ring * 0.18, 0.007, 8, 144]} />
+        <torusGeometry args={[0.92 + ring * 0.18, 0.007, 8, settings.ringSegments]} />
         <meshBasicMaterial
           blending={AdditiveBlending}
           color={ring % 2 === 0 ? node.ambient.alert : node.ambient.secondary}
@@ -826,11 +971,11 @@ const ScannerLattice = ({ activationProgress, active, node, revealed }: Artifact
       {helix.map((pair, index) => (
         <group key={`dna-${index}`}>
           <mesh position={pair.left} scale={0.035 + activationProgress * 0.01}>
-            <sphereGeometry args={[1, 12, 12]} />
+            <sphereGeometry args={[1, quality === "low" ? 8 : 10, quality === "low" ? 8 : 10]} />
             <meshBasicMaterial color={node.ambient.secondary} />
           </mesh>
           <mesh position={pair.right} scale={0.035 + activationProgress * 0.01}>
-            <sphereGeometry args={[1, 12, 12]} />
+            <sphereGeometry args={[1, quality === "low" ? 8 : 10, quality === "low" ? 8 : 10]} />
             <meshBasicMaterial color={node.ambient.alert} />
           </mesh>
           {index % 2 === 0 ? (
@@ -966,7 +1111,7 @@ const DataMonolith = ({ activationProgress, active, node, revealed }: ArtifactRe
   </group>
 );
 
-const TransmissionBeacon = ({ activationProgress, active, node, revealed }: ArtifactRenderProps) => (
+const TransmissionBeacon = ({ activationProgress, active, node, quality, revealed }: ArtifactRenderProps) => (
   <group>
     <mesh rotation={[activationProgress * 0.14, 0, Math.PI / 4]}>
       <octahedronGeometry args={[0.96, 2]} />
@@ -981,7 +1126,7 @@ const TransmissionBeacon = ({ activationProgress, active, node, revealed }: Arti
       />
     </mesh>
     <mesh position={[0, -1.0, 0]} rotation={[0, 0, Math.PI]}>
-      <coneGeometry args={[0.42, 1.8, 64, 1, true]} />
+      <coneGeometry args={[0.42, 1.8, quality === "high" ? 48 : 32, 1, true]} />
       <meshBasicMaterial
         blending={AdditiveBlending}
         color={node.ambient.alert}
@@ -1004,17 +1149,19 @@ const SignatureBody = (props: ArtifactRenderProps) => {
 };
 
 const SignatureArtifact = (props: ArtifactRenderProps) => {
-  const { active, hovered, node, revealed } = props;
+  const { active, hovered, node, quality, revealed } = props;
+  const settings = renderQualitySettings[quality];
 
   return (
     <group>
       <SignatureBody {...props} />
       <InternalLattice {...props} />
-      <EnergyRings active={hovered || revealed} color={node.ambient.alert} />
+      <EnergyRings active={hovered || revealed} color={node.ambient.alert} quality={quality} />
+      <ChargeHalo {...props} />
       <ShardConstellation {...props} />
       <Sparkles
         color={node.ambient.alert}
-        count={active ? 120 : 36}
+        count={active ? settings.sparkleActive : settings.sparkleIdle}
         opacity={active ? 0.68 : 0.2}
         scale={active ? 4.2 : 2.2}
         size={active ? 2.25 : 0.9}
@@ -1027,28 +1174,35 @@ const SignatureArtifact = (props: ArtifactRenderProps) => {
 const InteractiveArtifact = ({
   node,
   onNarration,
+  quality,
 }: {
   node: MissionNode;
   onNarration: (node: MissionNode | null) => void;
+  quality: RenderQuality;
 }) => {
   const groupRef = useRef<Group>(null);
   const coreRef = useRef<Mesh>(null);
   const holdStartRef = useRef<number | null>(null);
+  const holdingRef = useRef(false);
+  const chargeReadyRef = useRef(false);
+  const lastChargeAudioRef = useRef(0);
   const [hovered, setHovered] = useState(false);
   const [holding, setHolding] = useState(false);
   const {
     activationProgress,
+    activationProgressRef,
     activatedNode,
     activeNode,
     intensity,
+    intensityRef,
     reducedMotion,
-    sceneProgress,
+    sceneProgressRef,
     setActivationProgress,
     setActivatedNode,
     setFocusedNode,
     setIntensity,
     setMode,
-    transitionProgress,
+    transitionProgressRef,
   } = useEnvironment();
   const isActive = activeNode === node.id;
   const isRevealed = activatedNode === node.id;
@@ -1060,27 +1214,48 @@ const InteractiveArtifact = ({
     if (!groupRef.current) return;
 
     const elapsed = clock.getElapsedTime();
-    if (holding && holdStartRef.current !== null && isActive) {
+    const liveActivation = activationProgressRef.current;
+    const liveIntensity = intensityRef.current;
+    const liveSceneProgress = sceneProgressRef.current;
+    const liveTransitionProgress = transitionProgressRef.current;
+
+    if (holdingRef.current && holdStartRef.current !== null && isActive) {
       const holdProgress = Math.min((performance.now() - holdStartRef.current) / HOLD_THRESHOLD_MS, 1);
       setActivationProgress(holdProgress);
       setIntensity(Math.max(0.46, holdProgress * 0.92));
+
+      if (performance.now() - lastChargeAudioRef.current > 45) {
+        window.cyberAudio?.updateCharge?.(holdProgress);
+        lastChargeAudioRef.current = performance.now();
+      }
+
+      if (holdProgress >= 1 && !chargeReadyRef.current) {
+        chargeReadyRef.current = true;
+        window.cyberAudio?.playInterface("ready");
+      }
     }
 
     const distance = Math.abs(activeIndex - nodeIndex);
     const visibility = isActive ? 1 : Math.max(0, 1 - distance * 0.78);
     targetPositionVector
       .copy(isMobile ? mobileArtifactPosition : artifactPosition)
-      .add(new Vector3((nodeIndex - activeIndex) * 0.34, Math.sin(sceneProgress * Math.PI) * 0.12, -distance * 0.42));
+      .add(
+        artifactOffsetVector.set(
+          (nodeIndex - activeIndex) * 0.34,
+          Math.sin(liveSceneProgress * Math.PI) * 0.12,
+          -distance * 0.42,
+        ),
+      );
     const targetScale =
-      isActive ? (hovered || holding ? 1.3 : 1.16) + intensity * 0.08 + activationProgress * 0.07 : 0.25;
+      isActive ? (hovered || holding ? 1.3 : 1.16) + liveIntensity * 0.08 + liveActivation * 0.07 : 0.25;
 
     groupRef.current.position.lerp(targetPositionVector, 0.06);
     groupRef.current.scale.lerp(targetScaleVector.set(targetScale, targetScale, targetScale), 0.07);
-    groupRef.current.rotation.y += reducedMotion ? 0 : 0.006 + intensity * 0.012;
+    groupRef.current.rotation.y += reducedMotion ? 0 : 0.006 + liveIntensity * 0.012;
     groupRef.current.rotation.x = Math.sin(elapsed * 0.32 + nodeIndex) * 0.12;
     groupRef.current.rotation.z = MathUtils.lerp(
       groupRef.current.rotation.z,
-      (sceneProgress - 0.5) * 0.16,
+      (liveSceneProgress - 0.5) * 0.16,
       0.05,
     );
 
@@ -1092,8 +1267,8 @@ const InteractiveArtifact = ({
           material.opacity,
           isActive
             ? (hovered || isRevealed || holding ? 0.035 : 0.012) +
-                transitionProgress * 0.018 +
-                activationProgress * 0.025
+                liveTransitionProgress * 0.018 +
+                liveActivation * 0.025
             : 0,
           0.06,
         );
@@ -1105,7 +1280,7 @@ const InteractiveArtifact = ({
     event?.stopPropagation();
     if (!isActive) return;
 
-    window.cyberAudio?.playInterface("unlock");
+    window.cyberAudio?.completeCharge?.();
     setActivationProgress(1);
     setActivatedNode(node.id);
     setFocusedNode(null);
@@ -1119,12 +1294,15 @@ const InteractiveArtifact = ({
     if (!isActive) return;
 
     holdStartRef.current = performance.now();
+    holdingRef.current = true;
+    chargeReadyRef.current = false;
+    lastChargeAudioRef.current = 0;
     setHolding(true);
     setFocusedNode(node.id);
     setActivationProgress(0.08);
     setIntensity(0.46);
     setMode("scan");
-    window.cyberAudio?.playInterface("hold");
+    window.cyberAudio?.startCharge?.();
   };
 
   const releaseHold = (event: ThreeEvent<PointerEvent>) => {
@@ -1133,27 +1311,32 @@ const InteractiveArtifact = ({
 
     const elapsed = performance.now() - holdStartRef.current;
     holdStartRef.current = null;
+    holdingRef.current = false;
     setHolding(false);
 
-    if (elapsed >= HOLD_THRESHOLD_MS) {
+    if (elapsed >= HOLD_THRESHOLD_MS || chargeReadyRef.current || activationProgressRef.current >= 0.98) {
+      window.cyberAudio?.updateCharge?.(1);
       activate(event);
       return;
     }
 
+    chargeReadyRef.current = false;
     setActivationProgress(0);
     setFocusedNode(null);
     setIntensity(isRevealed ? 1 : 0);
-    window.cyberAudio?.playInterface("cancel");
+    window.cyberAudio?.cancelCharge?.();
   };
 
   const cancelHold = () => {
     if (!holding) return;
     holdStartRef.current = null;
+    holdingRef.current = false;
+    chargeReadyRef.current = false;
     setHolding(false);
     setActivationProgress(0);
     setFocusedNode(null);
     setIntensity(isRevealed ? 1 : 0);
-    window.cyberAudio?.playInterface("cancel");
+    window.cyberAudio?.cancelCharge?.();
   };
 
   const setObjectHover = (nextHover: boolean) => {
@@ -1199,26 +1382,33 @@ const InteractiveArtifact = ({
           active={isActive}
           hovered={hovered || holding}
           node={node}
+          quality={quality}
           revealed={isRevealed}
         />
       </Float>
-      <pointLight
-        color={node.ambient.secondary}
-        distance={8}
-        intensity={isActive ? 3.4 + intensity * 3.6 : 0.55}
-        position={[0.8, 0.5, 1.4]}
-      />
-      <pointLight
-        color={node.ambient.alert}
-        distance={5.2}
-        intensity={isActive ? 1.2 + intensity * 2.4 : 0.24}
-        position={[-0.9, -0.3, 1.2]}
-      />
+      {isActive ? (
+        <>
+          <pointLight
+            color={node.ambient.secondary}
+            distance={8}
+            intensity={3.4 + intensity * 3.2}
+            position={[0.8, 0.5, 1.4]}
+          />
+          {quality !== "low" ? (
+            <pointLight
+              color={node.ambient.alert}
+              distance={5.2}
+              intensity={1.2 + intensity * 2.1}
+              position={[-0.9, -0.3, 1.2]}
+            />
+          ) : null}
+        </>
+      ) : null}
     </group>
   );
 };
 
-const SceneLighting = () => {
+const SceneLighting = ({ quality }: { quality: RenderQuality }) => {
   const keyRef = useRef<Group>(null);
   const { activationProgress, activeNode, intensity, mode, transitionProgress } = useEnvironment();
   const node = missionNodes.find((item) => item.id === activeNode) ?? missionNodes[0];
@@ -1251,21 +1441,36 @@ const SceneLighting = () => {
           penumbra={0.8}
           position={[-2.8, 3.5, 5]}
         />
-        <spotLight
-          angle={0.55}
-          color={node.ambient.alert}
-          intensity={1.6 + intensity * 2.2 + activationProgress * 1.8}
-          penumbra={0.9}
-          position={[3.2, -1.1, 3.4]}
-        />
+        {quality !== "low" ? (
+          <spotLight
+            angle={0.55}
+            color={node.ambient.alert}
+            intensity={1.6 + intensity * 2.2 + activationProgress * 1.8}
+            penumbra={0.9}
+            position={[3.2, -1.1, 3.4]}
+          />
+        ) : null}
       </group>
     </>
   );
 };
 
-const World = ({ onNarration }: World3DSceneProps) => {
+const World = ({
+  onNarration,
+  quality,
+}: World3DSceneProps & { quality: RenderQuality }) => {
   const { activationProgress, activeNode, intensity, reducedMotion, transitionProgress } = useEnvironment();
   const node = missionNodes.find((item) => item.id === activeNode) ?? missionNodes[0];
+  const activeIndex = getNodeIndex(activeNode);
+  const settings = renderQualitySettings[quality];
+  const visibleNodes = useMemo(
+    () =>
+      missionNodes.filter(
+        (missionNode) =>
+          Math.abs(getNodeIndex(missionNode.id) - activeIndex) <= settings.visibleNeighborRange,
+      ),
+    [activeIndex, settings.visibleNeighborRange],
+  );
 
   const fogColor = useMemo(
     () => new Color(node.ambient.primary).lerp(new Color("#020107"), 0.56),
@@ -1284,9 +1489,9 @@ const World = ({ onNarration }: World3DSceneProps) => {
         ]}
       />
       <CameraRig />
-      <SceneLighting />
+      <SceneLighting quality={quality} />
       <Stars
-        count={reducedMotion ? 420 : 1300}
+        count={reducedMotion ? Math.round(settings.starCount * 0.35) : settings.starCount}
         depth={42}
         factor={2.8}
         fade
@@ -1294,37 +1499,77 @@ const World = ({ onNarration }: World3DSceneProps) => {
         saturation={0}
         speed={reducedMotion ? 0 : 0.32}
       />
-      <CinematicEnvironment />
-      <Environment preset="night" />
-      {missionNodes.map((missionNode) => (
+      <CinematicEnvironment quality={quality} />
+      {settings.environmentPreset ? <Environment preset="night" /> : null}
+      {visibleNodes.map((missionNode) => (
         <InteractiveArtifact
           key={missionNode.id}
           node={missionNode}
           onNarration={onNarration}
+          quality={quality}
         />
       ))}
     </>
   );
 };
 
+const PerformanceStatsProbe = ({ quality }: { quality: RenderQuality }) => {
+  const { gl } = useThree();
+  const frameCountRef = useRef(0);
+  const lastUpdateRef = useRef(0);
+
+  useFrame(({ clock }) => {
+    frameCountRef.current += 1;
+    const now = clock.elapsedTime * 1000;
+    if (now - lastUpdateRef.current < 650) return;
+
+    const elapsed = Math.max(1, now - lastUpdateRef.current);
+    const fps = Math.round((frameCountRef.current * 1000) / elapsed);
+    frameCountRef.current = 0;
+    lastUpdateRef.current = now;
+
+    const debugNode = document.getElementById("perf-debug");
+    if (!debugNode) return;
+
+    const render = gl.info.render;
+    debugNode.textContent = `FPS ${fps} / ${quality.toUpperCase()} / calls ${render.calls} / tris ${render.triangles}`;
+  });
+
+  return null;
+};
+
+const PerformanceDebugOverlay = ({ quality }: { quality: RenderQuality }) => (
+  <div
+    className="pointer-events-none fixed bottom-4 left-4 z-[90] rounded-full border border-white/10 bg-black/45 px-3 py-2 font-mono text-[9px] uppercase tracking-[0.18em] text-white/58 backdrop-blur-xl"
+    id="perf-debug"
+  >
+    FPS measuring / {quality}
+  </div>
+);
+
 const World3DSceneComponent = ({ onNarration }: World3DSceneProps) => {
   const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+  const quality = useMemo(detectRenderQuality, []);
+  const settings = renderQualitySettings[quality];
+  const debugPerformance = shouldShowPerformanceDebug();
 
   return (
     <div className="fixed inset-0 z-[8]">
       {/* PERF: R3F owns the world RAF loop; particle geometry and shader materials are disposed when the Canvas unmounts. */}
       <Canvas
         camera={{ fov: isMobile ? 58 : 42, near: 0.1, position: [0.12, 0.35, 6.65] }}
-        dpr={isMobile ? [0.75, 1.1] : [1, 1.45]}
+        dpr={settings.dpr}
         gl={{
           alpha: false,
-          antialias: true,
+          antialias: settings.antialias,
           powerPreference: "high-performance",
         }}
         shadows={false}
       >
-        <World onNarration={onNarration} />
+        {debugPerformance ? <PerformanceStatsProbe quality={quality} /> : null}
+        <World onNarration={onNarration} quality={quality} />
       </Canvas>
+      {debugPerformance ? <PerformanceDebugOverlay quality={quality} /> : null}
     </div>
   );
 };
