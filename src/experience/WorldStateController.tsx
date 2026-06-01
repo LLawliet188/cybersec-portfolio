@@ -8,6 +8,7 @@ const WorldStateControllerComponent = () => {
     activatedNode,
     focusedNode,
     reducedMotion,
+    setActivationProgress,
     setActiveNode,
     setMode,
     setProgress,
@@ -66,6 +67,7 @@ const WorldStateControllerComponent = () => {
       setTransitionProgress(transitionPressure);
 
       if (!focusedNode && activatedNode !== closestId) {
+        setActivationProgress(0);
         if (closestId === "operations") setMode("breach");
         else if (closestId === "boot") setMode("idle");
         else setMode("scan");
@@ -93,6 +95,7 @@ const WorldStateControllerComponent = () => {
     activatedNode,
     focusedNode,
     setActiveNode,
+    setActivationProgress,
     setMode,
     setProgress,
     setSceneProgress,

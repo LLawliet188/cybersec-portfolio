@@ -11,6 +11,7 @@ import { missionNodes } from "./missionContent";
 import type { EnvironmentMode, MissionId } from "./types";
 
 type EnvironmentState = {
+  activationProgress: number;
   activatedNode: MissionId | null;
   activeNode: MissionId;
   focusedNode: MissionId | null;
@@ -20,6 +21,7 @@ type EnvironmentState = {
   reducedMotion: boolean;
   sceneProgress: number;
   transitionProgress: number;
+  setActivationProgress: (progress: number) => void;
   setActivatedNode: (node: MissionId | null) => void;
   setActiveNode: (node: MissionId) => void;
   setFocusedNode: (node: MissionId | null) => void;
@@ -38,6 +40,7 @@ const getInitialReducedMotion = () =>
     : false;
 
 const EnvironmentProviderComponent = ({ children }: { children: ReactNode }) => {
+  const [activationProgress, setRawActivationProgress] = useState(0);
   const [activeNode, setActiveNode] = useState<MissionId>(missionNodes[0].id);
   const [activatedNode, setActivatedNode] = useState<MissionId | null>(null);
   const [focusedNode, setFocusedNode] = useState<MissionId | null>(null);
@@ -50,6 +53,10 @@ const EnvironmentProviderComponent = ({ children }: { children: ReactNode }) => 
 
   const setIntensity = useCallback((nextIntensity: number) => {
     setRawIntensity(Math.min(Math.max(nextIntensity, 0), 1));
+  }, []);
+
+  const setActivationProgress = useCallback((nextProgress: number) => {
+    setRawActivationProgress(Math.min(Math.max(nextProgress, 0), 1));
   }, []);
 
   const setProgress = useCallback((nextProgress: number) => {
@@ -66,6 +73,7 @@ const EnvironmentProviderComponent = ({ children }: { children: ReactNode }) => 
 
   const value = useMemo(
     () => ({
+      activationProgress,
       activatedNode,
       activeNode,
       focusedNode,
@@ -75,6 +83,7 @@ const EnvironmentProviderComponent = ({ children }: { children: ReactNode }) => 
       reducedMotion,
       sceneProgress,
       transitionProgress,
+      setActivationProgress,
       setActivatedNode,
       setActiveNode,
       setFocusedNode,
@@ -85,6 +94,7 @@ const EnvironmentProviderComponent = ({ children }: { children: ReactNode }) => 
       setTransitionProgress,
     }),
     [
+      activationProgress,
       activatedNode,
       activeNode,
       focusedNode,
@@ -94,6 +104,7 @@ const EnvironmentProviderComponent = ({ children }: { children: ReactNode }) => 
       reducedMotion,
       sceneProgress,
       transitionProgress,
+      setActivationProgress,
       setIntensity,
       setProgress,
       setSceneProgress,

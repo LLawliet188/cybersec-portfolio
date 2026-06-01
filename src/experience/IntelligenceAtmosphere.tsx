@@ -14,7 +14,16 @@ const telemetry = [
 ];
 
 const IntelligenceAtmosphereComponent = () => {
-  const { activeNode, focusedNode, intensity, mode, progress, sceneProgress, transitionProgress } =
+  const {
+    activationProgress,
+    activeNode,
+    focusedNode,
+    intensity,
+    mode,
+    progress,
+    sceneProgress,
+    transitionProgress,
+  } =
     useEnvironment();
   const node = missionNodes.find((item) => item.id === activeNode) ?? missionNodes[0];
   const isAlert = mode === "breach";
@@ -34,8 +43,8 @@ const IntelligenceAtmosphereComponent = () => {
 
       <motion.div
         animate={{
-          opacity: isAlert ? 0.46 + transitionProgress * 0.12 : 0.3 + intensity * 0.16 + transitionProgress * 0.1,
-          scale: 1 + progress * 0.08 + intensity * 0.05 + transitionProgress * 0.04,
+          opacity: isAlert ? 0.46 + transitionProgress * 0.12 + activationProgress * 0.12 : 0.3 + intensity * 0.16 + transitionProgress * 0.1 + activationProgress * 0.1,
+          scale: 1 + progress * 0.08 + intensity * 0.05 + transitionProgress * 0.04 + activationProgress * 0.06,
           x: focusedNode ? 18 : (sceneProgress - 0.5) * 34,
         }}
         className="absolute left-1/2 top-[-18rem] h-[52rem] w-[82rem] -translate-x-1/2 rounded-[50%] blur-[86px]"
@@ -47,10 +56,10 @@ const IntelligenceAtmosphereComponent = () => {
 
       <motion.div
         animate={{
-          opacity: 0.36 + intensity * 0.2 + transitionProgress * 0.18,
+          opacity: 0.36 + intensity * 0.2 + transitionProgress * 0.18 + activationProgress * 0.14,
           rotateX: 64 - intensity * 6 - transitionProgress * 8,
           scale: 1 + progress * 0.1 + transitionProgress * 0.07,
-          y: progress * -70 - transitionProgress * 30,
+          y: progress * -70 - transitionProgress * 30 - activationProgress * 22,
         }}
         className="absolute bottom-[-17rem] left-1/2 h-[42rem] w-[95rem] -translate-x-1/2 rounded-[50%] border border-white/10 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.08),transparent_58%)]"
         transition={{ duration: 1.1, ease: premiumEase }}
@@ -58,7 +67,7 @@ const IntelligenceAtmosphereComponent = () => {
 
       <motion.div
         animate={{
-          opacity: isAlert ? 0.42 : 0.22 + transitionProgress * 0.16,
+          opacity: isAlert ? 0.42 + activationProgress * 0.08 : 0.22 + transitionProgress * 0.16 + activationProgress * 0.1,
           rotate: isAlert ? -6 : (sceneProgress - 0.5) * 4,
           scale: 1 + intensity * 0.06 + transitionProgress * 0.08,
         }}
@@ -68,7 +77,7 @@ const IntelligenceAtmosphereComponent = () => {
 
       <motion.div
         animate={{
-          opacity: 0.42 + intensity * 0.18 + transitionProgress * 0.22,
+          opacity: 0.42 + intensity * 0.18 + transitionProgress * 0.22 + activationProgress * 0.12,
           rotate: focusedNode ? 18 : 0,
           scale: 1 + intensity * 0.12 + transitionProgress * 0.1,
         }}
@@ -87,8 +96,8 @@ const IntelligenceAtmosphereComponent = () => {
         />
         <motion.div
           animate={{
-            boxShadow: `0 0 ${42 + intensity * 64}px ${node.ambient.secondary}66`,
-            opacity: 0.18 + intensity * 0.16,
+            boxShadow: `0 0 ${42 + intensity * 64 + activationProgress * 48}px ${node.ambient.secondary}66`,
+            opacity: 0.18 + intensity * 0.16 + activationProgress * 0.12,
           }}
           className="absolute left-1/2 top-1/2 h-28 w-28 -translate-x-1/2 -translate-y-1/2 rounded-full"
           style={{ background: node.ambient.secondary }}
@@ -100,7 +109,7 @@ const IntelligenceAtmosphereComponent = () => {
         {telemetry.map((item, index) => (
           <motion.span
             animate={{
-              opacity: [0.12, focusedNode ? 0.62 : 0.34, 0.12],
+              opacity: [0.12, focusedNode ? 0.62 : 0.34 + activationProgress * 0.18, 0.12],
               y: [0, -18 - index * 3, 0],
             }}
             className="absolute font-mono text-[9px] uppercase tracking-[0.28em] text-white/55"
@@ -123,7 +132,7 @@ const IntelligenceAtmosphereComponent = () => {
 
       <motion.div
         animate={{
-          opacity: isAlert ? 0.22 : 0.08 + intensity * 0.1,
+          opacity: isAlert ? 0.22 + activationProgress * 0.08 : 0.08 + intensity * 0.1 + activationProgress * 0.08,
         }}
         className="absolute inset-0 bg-[radial-gradient(circle_at_50%_45%,transparent_0%,rgba(0,0,0,0.12)_38%,rgba(0,0,0,0.78)_100%)]"
       />

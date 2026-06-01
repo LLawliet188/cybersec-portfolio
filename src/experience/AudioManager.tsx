@@ -2,7 +2,7 @@ import { memo, useCallback, useEffect, useMemo, useRef } from "react";
 import { Howl, Howler } from "howler";
 import { useEnvironment } from "./EnvironmentProvider";
 import { createNarrationUtterance } from "./NarrationManager";
-import type { MissionNode } from "./types";
+import type { MissionId, MissionNode } from "./types";
 
 type AudioManagerProps = {
   activeNarration?: MissionNode | null;
@@ -19,6 +19,22 @@ type AudioApi = {
 };
 
 type InterfaceSound = "cancel" | "click" | "hold" | "hover" | "unlock";
+
+const sceneAudioProfiles: Record<
+  MissionId,
+  {
+    formant: number;
+    shimmer: number;
+    whisper: number;
+  }
+> = {
+  arsenal: { formant: 1280, shimmer: 248, whisper: 1780 },
+  boot: { formant: 920, shimmer: 176, whisper: 1460 },
+  file: { formant: 1180, shimmer: 214, whisper: 1620 },
+  identity: { formant: 1040, shimmer: 194, whisper: 1540 },
+  operations: { formant: 760, shimmer: 138, whisper: 1220 },
+  transmission: { formant: 1320, shimmer: 268, whisper: 1880 },
+};
 
 export const createTone = (frequency: number, duration = 0.18) => {
   const sampleRate = 22050;
@@ -70,13 +86,20 @@ const AudioManagerComponent = ({
   setEnabled,
   volume,
 }: AudioManagerProps) => {
-  const { intensity, mode, transitionProgress } = useEnvironment();
+  const { activationProgress, activeNode, intensity, mode, transitionProgress } =
+    useEnvironment();
   const ambienceRef = useRef<{
     context: AudioContext;
     gain: GainNode;
     oscillatorA: OscillatorNode;
     oscillatorB: OscillatorNode;
+    shimmerFilter: BiquadFilterNode;
+    shimmerGain: GainNode;
+    shimmerOscillator: OscillatorNode;
     filter: BiquadFilterNode;
+    whisperFilter: BiquadFilterNode;
+    whisperGain: GainNode;
+    whisperSource: AudioBufferSourceNode;
   } | null>(null);
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
   const narrationRef = useRef<Howl | null>(null);
@@ -101,25 +124,70 @@ const AudioManagerComponent = ({
     const context = new AudioContext();
     const gain = context.createGain();
     const filter = context.createBiquadFilter();
+    const whisperFilter = context.createBiquadFilter();
+    const shimmerFilter = context.createBiquadFilter();
+    const whisperGain = context.createGain();
+    const shimmerGain = context.createGain();
     const oscillatorA = context.createOscillator();
     const oscillatorB = context.createOscillator();
+    const shimmerOscillator = context.createOscillator();
+    const whisperSource = context.createBufferSource();
+    const whisperBuffer = context.createBuffer(1, context.sampleRate * 4, context.sampleRate);
+    const whisperData = whisperBuffer.getChannelData(0);
+
+    for (let index = 0; index < whisperData.length; index += 1) {
+      const envelope = Math.sin((index / whisperData.length) * Math.PI);
+      whisperData[index] = (Math.random() * 2 - 1) * envelope * 0.2;
+    }
 
     oscillatorA.type = "sine";
     oscillatorB.type = "triangle";
+    shimmerOscillator.type = "sine";
     oscillatorA.frequency.value = 44;
     oscillatorB.frequency.value = 91;
+    shimmerOscillator.frequency.value = 176;
     filter.type = "lowpass";
     filter.frequency.value = 440;
+    whisperFilter.type = "bandpass";
+    whisperFilter.Q.value = 4.8;
+    whisperFilter.frequency.value = 1460;
+    shimmerFilter.type = "bandpass";
+    shimmerFilter.Q.value = 8;
+    shimmerFilter.frequency.value = 920;
     gain.gain.value = 0;
+    whisperGain.gain.value = 0;
+    shimmerGain.gain.value = 0;
+    whisperSource.buffer = whisperBuffer;
+    whisperSource.loop = true;
 
     oscillatorA.connect(filter);
     oscillatorB.connect(filter);
     filter.connect(gain);
     gain.connect(context.destination);
+    whisperSource.connect(whisperFilter);
+    whisperFilter.connect(whisperGain);
+    whisperGain.connect(context.destination);
+    shimmerOscillator.connect(shimmerFilter);
+    shimmerFilter.connect(shimmerGain);
+    shimmerGain.connect(context.destination);
     oscillatorA.start();
     oscillatorB.start();
+    shimmerOscillator.start();
+    whisperSource.start();
 
-    ambienceRef.current = { context, filter, gain, oscillatorA, oscillatorB };
+    ambienceRef.current = {
+      context,
+      filter,
+      gain,
+      oscillatorA,
+      oscillatorB,
+      shimmerFilter,
+      shimmerGain,
+      shimmerOscillator,
+      whisperFilter,
+      whisperGain,
+      whisperSource,
+    };
     return ambienceRef.current;
   }, []);
 
@@ -143,11 +211,10 @@ const AudioManagerComponent = ({
       window.speechSynthesis?.cancel();
       const ambience = ambienceRef.current;
       if (ambience && ambience.context.state !== "closed") {
-        ambience.gain.gain.setTargetAtTime(
-          0,
-          ambience.context.currentTime,
-          0.5,
-        );
+        const now = ambience.context.currentTime;
+        ambience.gain.gain.setTargetAtTime(0, now, 0.5);
+        ambience.whisperGain.gain.setTargetAtTime(0, now, 0.4);
+        ambience.shimmerGain.gain.setTargetAtTime(0, now, 0.35);
       }
       return;
     }
@@ -163,14 +230,38 @@ const AudioManagerComponent = ({
 
     const ambience = ambienceRef.current;
     const now = ambience.context.currentTime;
+    const profile = sceneAudioProfiles[activeNode];
     const target =
-      (mode === "idle" ? 0.006 : 0.012 + intensity * 0.026 + transitionProgress * 0.012) *
+      (mode === "idle" ? 0.004 : 0.008 + intensity * 0.016 + transitionProgress * 0.008) *
+      volume;
+    const whisperTarget =
+      (0.0035 + transitionProgress * 0.005 + activationProgress * 0.012 + intensity * 0.006) *
+      volume;
+    const shimmerTarget =
+      (0.0018 + activationProgress * 0.005 + (mode === "breach" ? 0.004 : 0.001)) *
       volume;
     ambience.gain.gain.setTargetAtTime(target, now, 0.4);
+    ambience.whisperGain.gain.setTargetAtTime(whisperTarget, now, 0.55);
+    ambience.shimmerGain.gain.setTargetAtTime(shimmerTarget, now, 0.45);
     ambience.filter.frequency.setTargetAtTime(
       mode === "breach" ? 860 : mode === "intelligence" ? 680 : 420,
       now,
       0.35,
+    );
+    ambience.whisperFilter.frequency.setTargetAtTime(
+      profile.whisper + transitionProgress * 120,
+      now,
+      0.6,
+    );
+    ambience.shimmerFilter.frequency.setTargetAtTime(
+      profile.formant + activationProgress * 260,
+      now,
+      0.55,
+    );
+    ambience.shimmerOscillator.frequency.setTargetAtTime(
+      profile.shimmer + intensity * 24,
+      now,
+      0.55,
     );
     ambience.oscillatorA.frequency.setTargetAtTime(
       40 + intensity * 8 + transitionProgress * 6,
@@ -182,7 +273,7 @@ const AudioManagerComponent = ({
       now,
       0.5,
     );
-  }, [enabled, intensity, mode, transitionProgress, volume]);
+  }, [activationProgress, activeNode, enabled, intensity, mode, transitionProgress, volume]);
 
   useEffect(() => {
     if (!enabled || !activeNarration) return;
@@ -242,6 +333,8 @@ const AudioManagerComponent = ({
         try {
           ambience.oscillatorA.stop();
           ambience.oscillatorB.stop();
+          ambience.shimmerOscillator.stop();
+          ambience.whisperSource.stop();
         } catch {
           // The Strict Mode mount check can stop these once before the real mount.
         }

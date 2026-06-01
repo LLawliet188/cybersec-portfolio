@@ -14,6 +14,9 @@ export type MissionNode = {
   label: string;
   title: string;
   dek: string;
+  artifactName: string;
+  artifactMeaning: string;
+  worldName: string;
   interactionHint: string;
   narration: string;
   narrationSrc: string;

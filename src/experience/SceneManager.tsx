@@ -1,4 +1,4 @@
-import { memo, useEffect, useMemo, type CSSProperties } from "react";
+import { memo, useCallback, useEffect, useMemo, type CSSProperties } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowUpRight, FileText, Mail, Shield } from "lucide-react";
 import { GithubMark, LinkedinMark } from "../components/social/SocialIcons";
@@ -28,17 +28,48 @@ const ScrollRail = memo(() => (
   </div>
 ));
 
-const ObjectDirective = ({ node }: { node: MissionNode }) => (
+const ObjectDirective = ({
+  activationProgress,
+  node,
+  onActivate,
+}: {
+  activationProgress: number;
+  node: MissionNode;
+  onActivate: () => void;
+}) => (
   <motion.div
     animate={{ opacity: 1, y: 0 }}
-    className="mt-8 max-w-sm border-l border-white/16 pl-4"
+    className="mt-5 max-w-md border-l border-white/16 pl-4"
     initial={{ opacity: 0, y: 12 }}
     transition={{ duration: 0.6, ease: premiumEase }}
   >
     <p className="font-mono text-[9px] uppercase tracking-[0.24em] text-white/42">
-      Direct object interface
+      {node.worldName}
     </p>
-    <p className="mt-2 font-body text-sm leading-6 text-white/62">{node.interactionHint}</p>
+    <p className="mt-2 font-display text-lg font-bold uppercase tracking-[0.04em] text-primary">
+      {node.artifactName}
+    </p>
+    <div className="mt-3 flex flex-wrap items-center gap-3">
+      <button
+        className="group relative overflow-hidden rounded-full border border-white/16 bg-white/[0.045] px-4 py-3 font-mono text-[9px] font-bold uppercase tracking-[0.24em] text-primary backdrop-blur-xl transition duration-500 hover:border-white/35"
+        onClick={onActivate}
+        type="button"
+      >
+        <span className="relative z-10">Find out more</span>
+        <span
+          className="absolute inset-y-0 left-0 opacity-50 transition-[width] duration-150"
+          style={{
+            background: `linear-gradient(90deg, ${node.ambient.alert}44, ${node.ambient.secondary}1f)`,
+            width: `${Math.max(activationProgress, 0.08) * 100}%`,
+          }}
+        />
+      </button>
+      <span className="font-mono text-[9px] uppercase tracking-[0.22em] text-white/38">
+        Hold artifact / release at 100%
+      </span>
+    </div>
+    <p className="mt-3 font-body text-xs leading-5 text-white/52">{node.artifactMeaning}</p>
+    <p className="mt-2 font-body text-xs leading-5 text-white/38">{node.interactionHint}</p>
   </motion.div>
 );
 
@@ -182,7 +213,19 @@ const SceneIntel = ({ node }: { node: MissionNode }) => {
 };
 
 const SceneManagerComponent = ({ onNarration }: SceneManagerProps) => {
-  const { activatedNode, activeNode, intensity, sceneProgress, transitionProgress } =
+  const {
+    activationProgress,
+    activatedNode,
+    activeNode,
+    intensity,
+    sceneProgress,
+    setActivatedNode,
+    setActivationProgress,
+    setFocusedNode,
+    setIntensity,
+    setMode,
+    transitionProgress,
+  } =
     useEnvironment();
   const activeIndex = missionNodes.findIndex((item) => item.id === activeNode);
   const node = missionNodes[activeIndex] ?? missionNodes[0];
@@ -190,7 +233,26 @@ const SceneManagerComponent = ({ onNarration }: SceneManagerProps) => {
 
   useEffect(() => {
     onNarration(null);
-  }, [activeNode, onNarration]);
+    setActivationProgress(0);
+  }, [activeNode, onNarration, setActivationProgress]);
+
+  const activateCurrentNode = useCallback(() => {
+    window.cyberAudio?.playInterface("unlock");
+    setActivationProgress(1);
+    setActivatedNode(node.id);
+    setFocusedNode(null);
+    setIntensity(1);
+    setMode(node.id === "operations" ? "breach" : "intelligence");
+    onNarration(node);
+  }, [
+    node,
+    onNarration,
+    setActivatedNode,
+    setActivationProgress,
+    setFocusedNode,
+    setIntensity,
+    setMode,
+  ]);
 
   const nodeStyle = useMemo(
     () =>
@@ -230,17 +292,23 @@ const SceneManagerComponent = ({ onNarration }: SceneManagerProps) => {
               <p className="mt-5 font-mono text-[10px] uppercase tracking-[0.28em] text-white/42">
                 {node.label}
               </p>
-              <h1 className="mt-5 max-w-4xl font-display text-5xl font-bold uppercase leading-[0.92] text-primary sm:text-6xl lg:text-7xl">
+              <h1 className="mt-5 max-w-4xl font-display text-5xl font-bold uppercase leading-[0.92] text-primary sm:text-6xl xl:text-7xl">
                 {node.title}
               </h1>
               {!isActivated ? (
-                <p className="mt-7 max-w-2xl font-body text-base leading-8 text-secondary sm:text-lg">
+                <p className="mt-5 max-w-2xl font-body text-base leading-7 text-secondary sm:text-lg">
                   {node.dek}
                 </p>
               ) : null}
             </motion.div>
 
-            {!isActivated ? <ObjectDirective node={node} /> : null}
+            {!isActivated ? (
+              <ObjectDirective
+                activationProgress={activationProgress}
+                node={node}
+                onActivate={activateCurrentNode}
+              />
+            ) : null}
           </div>
 
           <div
